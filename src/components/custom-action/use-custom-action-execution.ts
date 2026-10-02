@@ -37,6 +37,7 @@ import {
   replaceSelectionToolbarCustomActionPromptTokens,
 } from "@/utils/custom-action-prompt"
 import { getOrCreateWebPageContext } from "@/utils/host/translate/webpage-context"
+import { withDictionaryCet } from "@/utils/layout-host/dictionary-cet"
 import { resolveModelId } from "@/utils/providers/model-id"
 import { getProviderOptionsWithOverride } from "@/utils/providers/options"
 import { getTopLevelReasoning } from "@/utils/providers/reasoning"
@@ -67,6 +68,7 @@ interface ResolvedWebPageContext {
 }
 
 interface CustomActionExecutionRequest {
+  context: CustomActionExecutionContext
   analytics: FeatureProviderAnalytics & {
     actionId: string
     actionName: string
@@ -271,6 +273,7 @@ function buildCustomActionExecutionRequest({
   const temperature = provider.kind === "local" ? provider.config.temperature : undefined
 
   return {
+    context: structuredClone(executionContext),
     analytics: {
       actionId: action.id,
       actionName: action.name,
@@ -327,6 +330,8 @@ export function useCustomActionExecution({
 }) {
   const [isRunning, setIsRunning] = useState(false)
   const [result, setResult] = useState<Record<string, unknown> | null>(null)
+  const [resultRequestKey, setResultRequestKey] = useState<string | null>(null)
+  const [resultContext, setResultContext] = useState<CustomActionExecutionContext | null>(null)
   const [error, setError] = useState<SelectionToolbarInlineError | null>(null)
   const [thinking, setThinking] = useState<ThinkingSnapshot | null>(null)
   const lastRunKeyRef = useRef<string | null>(null)
@@ -349,6 +354,8 @@ export function useCustomActionExecution({
   const resetSessionState = useCallback(() => {
     setIsRunning(false)
     setResult(null)
+    setResultContext(null)
+    setResultRequestKey(null)
     setError(null)
     setThinking(null)
   }, [])
@@ -387,6 +394,8 @@ export function useCustomActionExecution({
     const run = async () => {
       setIsRunning(true)
       setResult(null)
+      setResultContext(null)
+      setResultRequestKey(null)
       setError(null)
       setThinking({
         status: "thinking",
@@ -406,7 +415,9 @@ export function useCustomActionExecution({
                 return
               }
 
-              setResult(partial.output)
+              setResult(withDictionaryCet(request.context.action.outputSchema, partial.output))
+              setResultContext(request.context)
+              setResultRequestKey(request.key)
               setThinking(partial.thinking)
               scrollSelectionPopoverBodyToBottom(bodyRefRef.current)
             },
@@ -417,7 +428,9 @@ export function useCustomActionExecution({
           return
         }
 
-        setResult(finalResult.output)
+        setResult(withDictionaryCet(request.context.action.outputSchema, finalResult.output))
+        setResultContext(request.context)
+        setResultRequestKey(request.key)
         setThinking(finalResult.thinking)
         void trackFeatureUsed({
           ...analyticsContext,
@@ -467,7 +480,8 @@ export function useCustomActionExecution({
     error,
     isRunning,
     resetSessionState,
-    result,
+    result: resultRequestKey === executionRequestKey ? result : null,
+    resultContext: resultRequestKey === executionRequestKey ? resultContext : null,
     thinking,
   }
 }

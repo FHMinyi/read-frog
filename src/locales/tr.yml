@@ -310,7 +310,7 @@ options:
         selectionTranslation: Seçim araç çubuğundan, seçtiğiniz metni çevirir.
         inputTranslation: Bir metin kutusuna yazdıklarınızı göndermeden önce çevirir.
         videoSubtitles: Video oynatıcıda görünen altyazıları çevirir.
-        noteSuggestion: Seçim çevirisinden sonra Notebase'inize kaydetmeye değer kelimeler önerir.
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: Dil algılama
       description: Otomatik çeviri dil algılama ve Konuşma ses seçimi doğruluğunu etkiler.
@@ -616,7 +616,7 @@ options:
         description: Seçili metni sesli okuyan seslendirme düğmesini araç çubuğunda göster
       noteSuggestion:
         title: Not önerileri
-        description: Bir yapay zekâ sağlayıcısıyla seçim çevirisinden sonra Notebase'inize kaydedilecek kelimeler önerilir
+        description: "After translating a selection, suggest words to save to Anki with their original sentences."
         action: Eylem
         actionDescription: Öneriyi üreten eylem
         provider: Sağlayıcı
@@ -844,7 +844,7 @@ options:
             5. Cümle çevirisi yalnızca çıkarılan Cümleyi çevirmelidir.
             6. Okunuş, sözcüğün dilinin standart gösterimini kullanmalıdır (örneğin İngilizce için IPA, Mandarin Çincesi için pinyin, Japonca için romaji).
             7. Sözcük türünü İngilizce yazın (noun, verb, adjective vb.).
-            8. Zorluk bir CEFR düzeyi olmalıdır (A1, A2, B1, B2, C1 veya C2).
+            8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. Bir alan bilinmiyorsa tahmin etmek yerine boş bir dize döndürün.
             10. Açıklık için kaynak biçimde metin gerekmedikçe tüm metin alanlarını {{targetLanguage}} dilinde yanıtlayın.
             11. Cümledeki biçim, seçilen sözcüğün Cümlede nerede durduğunu işaretler. {"text": ...} öğelerinden oluşan kısa bir JSON dizisi içeren bir DİZEDİR; her öğe Cümleden harfi harfine alıntı yapar, örneğin [{"text":"blossoms"}]. Cümle sözcüğü ayrı parçalara bölüyorsa (örneğin "Er ruft seine Mutter an" içindeki "anrufen"), her parça için sırayla bir öğe verin: [{"text":"ruft"},{"text":"an"}]. İçteki tırnak işaretlerini doğru şekilde kaçış karakteriyle yazın.
@@ -862,7 +862,7 @@ options:
             - Cümledeki biçim: [{"text":"blossoms"}]
             - Tanım: 花；花朵（尤指果树的花）
             - Cümle çevirisi: 樱花短暂的美丽提醒我们珍惜每一刻。
-            - Zorluk: B2
+            - Zorluk: ""
 
             ### Örnek 2
             Girdi: Seçim="感動", Paragraflar="この映画はつまらないと思ったけど、最後は感動した。", Hedef dil=İngilizce
@@ -875,7 +875,7 @@ options:
             - Cümledeki biçim: [{"text":"感動"}]
             - Tanım: Being deeply moved; emotional touch
             - Cümle çevirisi: I thought this movie was boring, but the ending was moving.
-            - Zorluk: B1
+            - Zorluk: ""
           prompt: |-
             ## Girdi
             Seçim: {{selection}}
@@ -895,8 +895,8 @@ options:
           fieldDefinitionDescription: "Bağlamdaki anlam için kısa bir tanım."
           fieldSentenceTranslation: "Cümle çevirisi"
           fieldSentenceTranslationDescription: "Yalnızca Cümlenin çevirisi."
-          fieldDifficulty: "Zorluk"
-          fieldDifficultyDescription: "Tahmini CEFR zorluk düzeyi: A1, A2, B1, B2, C1 veya C2."
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "Leave empty. CET4/CET6 membership is computed from local word lists, never estimated by AI."
         sentenceAnalysis:
           name: "Cümle Analizi"
           description: "Uzun bir cümleyi öğretmen gibi işaretler: çekirdeği, her yan cümleyi ve zor noktaları"
@@ -1575,7 +1575,7 @@ action:
   addCustomAction: Özel AI eylemi ekle
 noteSuggestion:
   title: Kaydetmek isteyebilirsiniz
-  description: Notebase'inize kaydetmek istediğiniz kelimeleri seçin ve dilediğiniz zaman tekrarlayın.
+  description: "Choose words to save to Anki with their original sentences."
   save: Kaydet
   saved: Kaydedildi
   staleSuggestion: Bu öneri güncelliğini yitirdi
@@ -1873,3 +1873,33 @@ languages:
   wls: Wallis Dili
   rar: Rarotongan
   hif: Fiji Hintçesi
+
+anki:
+  title: "Anki"
+  description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
+  save: "Save to Anki"
+  saving: "Saving locally…"
+  synced: "Synced to Anki"
+  pending: "Queued for Anki"
+  error: "Needs attention"
+  syncing: "Syncing…"
+  setup: "Set up Anki"
+  savedLocally: "Saved on this device. Set up Anki to sync when Anki Desktop is open."
+  setupAnki: "Create cards with Anki Desktop on this computer. Review on mobile after syncing your collection and media."
+  setupConnect: "Install the AnkiConnect add-on (2055492159), restart Anki, and keep it open. If Anki asks, allow this extension to connect."
+  setupDeck: "Load your decks, choose an existing deck or enter a new name, then choose Save & enable sync."
+  audioRequired: "Word and sentence audio are required. If speech generation fails, the note stays queued and can be retried. Text is sent to Microsoft Edge speech services to generate audio."
+  endpoint: "Local AnkiConnect URL"
+  localOnly: "Only localhost or 127.0.0.1 is supported. No API key or account is needed."
+  deck: "Default deck"
+  loadDecks: "Load decks"
+  connected: "Connected. Your existing decks are available in the deck field."
+  voice: "Edge TTS voice"
+  enable: "Enable Anki sync"
+  saveAndEnable: Save & enable sync
+  saveSettings: "Save settings"
+  settingsSaved: "Anki settings saved."
+  queue: "Saved words"
+  retry: "Retry now"
+  queueDescription: "Saved locally first. Pending words sync when Anki Desktop is available. Repeated words update one note and keep their original sentences."
+  empty: "No saved words yet. Use Save to Anki from a dictionary result or word suggestion."

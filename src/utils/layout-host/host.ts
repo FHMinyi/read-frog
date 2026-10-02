@@ -6,6 +6,7 @@ import { LANG_CODE_TO_EN_NAME } from "@read-frog/definitions"
 import { defineLayoutHost } from "@read-frog/layout-engine/contract"
 import { buildLayoutScope } from "@read-frog/layout-engine/core"
 import { MAX_CUSTOM_ACTION_LAYOUT_LENGTH } from "@/types/config/selection-toolbar"
+import { withDictionaryCet } from "./dictionary-cet"
 import { contentLocaleFor, getImproveWritingLabels, getSentenceAnalysisLabels } from "./labels"
 import { IMPROVE_WRITING_LABELS_CTX_KEY, SENTENCE_ANALYSIS_LABELS_CTX_KEY } from "./slots"
 
@@ -60,7 +61,7 @@ export function buildCustomActionLayoutScope({
   return buildLayoutScope({
     host: CUSTOM_ACTION_LAYOUT_HOST,
     fields: outputSchema,
-    values: value,
+    values: value ? withDictionaryCet(outputSchema, value) : null,
     ctx: {
       selection,
       targetLanguage: LANG_CODE_TO_EN_NAME[targetCode],

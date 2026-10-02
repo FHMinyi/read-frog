@@ -310,7 +310,7 @@ options:
         selectionTranslation: 선택 도구 모음에서 선택한 텍스트를 번역합니다.
         inputTranslation: 입력창에 쓴 내용을 보내기 전에 번역합니다.
         videoSubtitles: 동영상 플레이어에 표시되는 자막을 번역합니다.
-        noteSuggestion: 선택 번역 후 Notebase에 저장할 만한 단어를 제안합니다.
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: 언어 감지
       description: 자동 번역 언어 감지 및 읽기 음성 선택 정확도에 영향을 줍니다.
@@ -616,7 +616,7 @@ options:
         description: 선택한 텍스트를 읽어 주는 읽기 버튼을 툴바에 표시합니다
       noteSuggestion:
         title: 노트 제안
-        description: AI 제공자로 선택 번역 후 Notebase에 저장할 단어를 추천합니다
+        description: "After translating a selection, suggest words to save to Anki with their original sentences."
         action: 작업
         actionDescription: 저장 제안을 만드는 작업
         provider: 제공업체
@@ -844,7 +844,7 @@ options:
             5. 예문 번역은 추출한 예문만 번역하세요.
             6. 발음은 해당 언어의 표준 표기법을 사용하세요(예: 영어는 IPA, 중국어는 병음, 일본어는 로마자).
             7. 품사는 영어로 쓰세요(noun, verb, adjective 등).
-            8. 난이도는 CEFR 등급(A1, A2, B1, B2, C1, C2) 중 하나여야 합니다.
+            8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. 알 수 없는 항목은 추측하지 말고 빈 문자열을 반환하세요.
             10. 원문 형태가 필요한 경우를 제외하고 모든 텍스트 항목은 {{targetLanguage}}(으)로 답하세요.
             11. 예문 속 형태는 선택한 표제어가 예문의 어디에 있는지 표시합니다. {"text": ...} 항목으로 이루어진 간결한 JSON 배열을 담은 문자열이며, 각 항목은 예문을 한 글자도 바꾸지 않고 그대로 인용합니다. 예: [{"text":"blossoms"}]. 예문에서 표제어가 여러 부분으로 나뉘어 있으면(예: "Er ruft seine Mutter an"의 "anrufen") 부분마다 순서대로 한 항목씩 쓰세요: [{"text":"ruft"},{"text":"an"}]. 안쪽 따옴표는 올바르게 이스케이프하세요.
@@ -862,7 +862,7 @@ options:
             - 예문 속 형태: [{"text":"blossoms"}]
             - 뜻: 花；花朵（尤指果树的花）
             - 예문 번역: 樱花短暂的美丽提醒我们珍惜每一刻。
-            - 난이도: B2
+            - 난이도: ""
 
             ### 예시 2
             입력: 선택 텍스트="感動", 문단="この映画はつまらないと思ったけど、最後は感動した。", 대상 언어=영어
@@ -875,7 +875,7 @@ options:
             - 예문 속 형태: [{"text":"感動"}]
             - 뜻: Being deeply moved; emotional touch
             - 예문 번역: I thought this movie was boring, but the ending was moving.
-            - 난이도: B1
+            - 난이도: ""
           prompt: |-
             ## 입력
             선택 텍스트: {{selection}}
@@ -895,8 +895,8 @@ options:
           fieldDefinitionDescription: "문맥상 의미에 대한 간결한 정의 하나."
           fieldSentenceTranslation: "예문 번역"
           fieldSentenceTranslationDescription: "예문만 번역한 것."
-          fieldDifficulty: "난이도"
-          fieldDifficultyDescription: "추정 CEFR 난이도: A1, A2, B1, B2, C1 또는 C2."
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "Leave empty. CET4/CET6 membership is computed from local word lists, never estimated by AI."
         sentenceAnalysis:
           name: "문장 구조 분석"
           description: "긴 문장을 선생님처럼 표시해 뼈대, 절, 어려운 부분을 한눈에 보여 줍니다"
@@ -1575,7 +1575,7 @@ action:
   addCustomAction: 커스텀 AI 액션 추가
 noteSuggestion:
   title: 저장 추천
-  description: Notebase에 저장할 단어를 선택하고 언제든지 복습하세요.
+  description: "Choose words to save to Anki with their original sentences."
   save: 저장
   saved: 저장됨
   staleSuggestion: 이 제안은 더 이상 유효하지 않습니다
@@ -1873,3 +1873,33 @@ languages:
   wls: 월리스어
   rar: 라로통가어
   hif: 피지 힌디어
+
+anki:
+  title: "Anki"
+  description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
+  save: "Save to Anki"
+  saving: "Saving locally…"
+  synced: "Synced to Anki"
+  pending: "Queued for Anki"
+  error: "Needs attention"
+  syncing: "Syncing…"
+  setup: "Set up Anki"
+  savedLocally: "Saved on this device. Set up Anki to sync when Anki Desktop is open."
+  setupAnki: "Create cards with Anki Desktop on this computer. Review on mobile after syncing your collection and media."
+  setupConnect: "Install the AnkiConnect add-on (2055492159), restart Anki, and keep it open. If Anki asks, allow this extension to connect."
+  setupDeck: "Load your decks, choose an existing deck or enter a new name, then choose Save & enable sync."
+  audioRequired: "Word and sentence audio are required. If speech generation fails, the note stays queued and can be retried. Text is sent to Microsoft Edge speech services to generate audio."
+  endpoint: "Local AnkiConnect URL"
+  localOnly: "Only localhost or 127.0.0.1 is supported. No API key or account is needed."
+  deck: "Default deck"
+  loadDecks: "Load decks"
+  connected: "Connected. Your existing decks are available in the deck field."
+  voice: "Edge TTS voice"
+  enable: "Enable Anki sync"
+  saveAndEnable: Save & enable sync
+  saveSettings: "Save settings"
+  settingsSaved: "Anki settings saved."
+  queue: "Saved words"
+  retry: "Retry now"
+  queueDescription: "Saved locally first. Pending words sync when Anki Desktop is available. Repeated words update one note and keep their original sentences."
+  empty: "No saved words yet. Use Save to Anki from a dictionary result or word suggestion."

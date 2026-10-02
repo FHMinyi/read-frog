@@ -183,6 +183,10 @@ describe("createDefaultDictionaryAction layout", () => {
     )
     // The term's quotes are not shown as text: they mark the sentence.
     const slots = getDictionarySlots(action.outputSchema)
+    // The legacy difficulty slot is populated by verified local membership.
+    const { getCetMembership } = await import("@/utils/anki/cet")
+    value[slots.term!.name] = "ability"
+    value[slots.difficulty!.name] = getCetMembership("ability").join(" · ")
     const sentence = value[slots.context?.name ?? ""]
     const termName = slots.contextTerm?.name ?? ""
     value[termName] = JSON.stringify([{ text: sentence }])

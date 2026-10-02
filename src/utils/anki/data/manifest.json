@@ -1,0 +1,41 @@
+{
+  "source": {
+    "name": "ECDICT",
+    "author": "Linwei (skywind3000)",
+    "repository": "https://github.com/skywind3000/ECDICT",
+    "revision": "bc015ed2e24a7abef49fc6dbbb7fe32c1dadaf8b",
+    "file": "ecdict.csv",
+    "url": "https://raw.githubusercontent.com/skywind3000/ECDICT/bc015ed2e24a7abef49fc6dbbb7fe32c1dadaf8b/ecdict.csv",
+    "sha256": "1a6947e04785db63613a92e14903cdae7954f7e84860b10e68e5c7cbb3f9c3cf",
+    "rows": 770611,
+    "license": "MIT",
+    "licenseUrl": "https://github.com/skywind3000/ECDICT/blob/bc015ed2e24a7abef49fc6dbbb7fe32c1dadaf8b/LICENSE",
+    "licenseSha256": "f8552dd246f61a4e064569eae6194a01c6b3d63b03bf27c6ca863593c549ed0f"
+  },
+  "generatedBy": "scripts/generate-anki-vocabulary.py",
+  "files": {
+    "src/utils/anki/data/cet4.txt": {
+      "sha256": "503b15006304b990533aa01ea054730637b17b2ac5243fc6b065d93154bafc3a",
+      "bytes": 30033
+    },
+    "src/utils/anki/data/cet6.txt": {
+      "sha256": "d987e7624726b435bdaf8cff66509b69492dabbfda56064011d0824ef17aff29",
+      "bytes": 44187
+    },
+    "src/utils/anki/data/inflections.tsv": {
+      "sha256": "91436b710c6dff2cba3687ea00bf27a67ec630839858ebd7b501c5f8e0df876f",
+      "bytes": 1062657
+    },
+    "public/licenses/anki-ecdict.txt": {
+      "sha256": "2cbd835a442abf469a4fc3f09e6223588b094ccd9a9b209fc55c46ff5071e068",
+      "bytes": 1546
+    }
+  },
+  "counts": {
+    "cet4": 3849,
+    "cet6": 5407,
+    "overlap": 3451,
+    "inflectionForms": 56970,
+    "inflectionFormsWithMultipleLemmas": 231
+  }
+}

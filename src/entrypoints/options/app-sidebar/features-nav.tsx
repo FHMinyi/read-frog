@@ -55,6 +55,16 @@ export function FeaturesNav() {
             </SidebarMenuButton>
           </SidebarMenuItem>
 
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              render={<Link to="/anki" />}
+              isActive={pathname === "/anki"}
+              tooltip={i18n.t("anki.title")}
+            >
+              <Icon icon="tabler:cards" />
+              <span>{i18n.t("anki.title")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <Collapsible defaultOpen={isTranslationActive} className="group/collapsible">
             <SidebarMenuItem>
               <CollapsibleTrigger

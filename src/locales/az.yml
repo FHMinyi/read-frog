@@ -311,7 +311,7 @@ options:
         selectionTranslation: Seçdiyiniz mətni seçim alətlər paneli vasitəsilə tərcümə edir.
         inputTranslation: Mətn sahəsinə yazdığınızı göndərməzdən əvvəl tərcümə edir.
         videoSubtitles: Subtitrləri video pleyerdə göründükcə tərcümə edir.
-        noteSuggestion: Seçilmiş mətn tərcümə edildikdən sonra Notebase daxilində saxlamağa dəyər sözlər təklif edir.
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: Dilin aşkarlanması
       description: Avtomatik tərcümədə dilin aşkarlanmasına və səsləndirmə üçün səs seçiminin dəqiqliyinə təsir edir.
@@ -617,7 +617,7 @@ options:
         description: Seçilmiş mətni ucadan oxuyan səsləndirmə düyməsini göstərin
       noteSuggestion:
         title: Qeyd təklifləri
-        description: Seçilmiş mətn süni intellekt provayderi ilə tərcümə edildikdən sonra Notebase daxilində saxlamaq üçün sözlər təklif edin
+        description: "After translating a selection, suggest words to save to Anki with their original sentences."
         action: Əməliyyat
         actionDescription: Təklifi yaradan əməliyyat
         provider: Provayder
@@ -847,7 +847,7 @@ options:
             5. Yalnız çıxarılmış cümləni tərcümə edin.
             6. Tələffüz üçün sözün dilindəki standart yazılışdan istifadə edin (məsələn, ingilis dili üçün IPA, mandarin dili üçün pinyin, yapon dili üçün romaji).
             7. Nitq hissəsini ingilis dilində yazın (isim, feil, sifət və s.).
-            8. Çətinlik CEFR səviyyəsi olmalıdır (A1, A2, B1, B2, C1 və ya C2).
+            8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. Sahənin dəyəri məlum deyilsə, təxmin etmək əvəzinə boş sətir qaytarın.
             10. Aydınlıq üçün mənbə formasında mətn tələb olunmadıqda bütün mətn sahələrini {{targetLanguage}} dilində yazın.
             11. Cümlədəki forma seçilmiş sözün Cümlədə harada olduğunu göstərir. Bu, {"text": ...} elementlərindən ibarət yığcam JSON massivi saxlayan SƏTİRdir; hər element Cümlədən hərfi-hərfinə sitat gətirir, məsələn [{"text":"çiçəklərinin"}]. Cümlə sözü ayrı hissələrə bölürsə (məsələn, "Er ruft seine Mutter an" cümləsində "anrufen"), hər hissə üçün ardıcıllıqla bir element verin: [{"text":"ruft"},{"text":"an"}]. Daxili dırnaq işarələrini düzgün escape edin.
@@ -865,7 +865,7 @@ options:
             - Cümlədəki forma: [{"text":"çiçəklərinin"}]
             - Tərif: Bitkinin çoxalma orqanı; xüsusilə meyvə ağacının çiçəyi.
             - Cümlənin tərcüməsi: Albalı çiçəklərinin ötəri gözəlliyi bizə hər anın qədrini bilməyi xatırladır.
-            - Çətinlik: B2
+            - Çətinlik: ""
 
             ### Nümunə 2
             Giriş: Seçim="təsirləndim", Abzaslar="Bu filmin darıxdırıcı olduğunu düşünürdüm, amma sonunda təsirləndim.", Hədəf dili=Azərbaycan dili
@@ -878,7 +878,7 @@ options:
             - Cümlədəki forma: [{"text":"təsirləndim"}]
             - Tərif: Dərin hisslər keçirmək, duyğulanmaq.
             - Cümlənin tərcüməsi: Bu filmin darıxdırıcı olduğunu düşünürdüm, amma sonunda təsirləndim.
-            - Çətinlik: B1
+            - Çətinlik: ""
           prompt: |-
             ## Giriş
             Seçim: {{selection}}
@@ -898,8 +898,8 @@ options:
           fieldDefinitionDescription: Kontekstdəki mənaya uyğun bir qısa tərif.
           fieldSentenceTranslation: Cümlənin tərcüməsi
           fieldSentenceTranslationDescription: Yalnız cümlənin tərcüməsi.
-          fieldDifficulty: Çətinlik
-          fieldDifficultyDescription: Təxmini CEFR çətinlik səviyyəsi A1, A2, B1, B2, C1 və ya C2.
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "Leave empty. CET4/CET6 membership is computed from local word lists, never estimated by AI."
         sentenceAnalysis:
           name: "Cümlə təhlili"
           description: "Uzun cümləni müəllim kimi işarələyir: əsası, hər budaq cümləni və çətin yerləri"
@@ -1580,7 +1580,7 @@ action:
   addCustomAction: Fərdi süni intellekt əməliyyatı əlavə et
 noteSuggestion:
   title: Saxlamağa dəyər
-  description: Notebase daxilində saxlamaq istədiyiniz sözləri seçin və istənilən vaxt təkrarlayın.
+  description: "Choose words to save to Anki with their original sentences."
   save: Yadda saxla
   saved: Yadda saxlanıldı
   staleSuggestion: Bu təklif köhnəlib
@@ -1871,3 +1871,33 @@ languages:
   wls: Uollis dili
   rar: Rarotonqa dili
   hif: Fici hindi dili
+
+anki:
+  title: "Anki"
+  description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
+  save: "Save to Anki"
+  saving: "Saving locally…"
+  synced: "Synced to Anki"
+  pending: "Queued for Anki"
+  error: "Needs attention"
+  syncing: "Syncing…"
+  setup: "Set up Anki"
+  savedLocally: "Saved on this device. Set up Anki to sync when Anki Desktop is open."
+  setupAnki: "Create cards with Anki Desktop on this computer. Review on mobile after syncing your collection and media."
+  setupConnect: "Install the AnkiConnect add-on (2055492159), restart Anki, and keep it open. If Anki asks, allow this extension to connect."
+  setupDeck: "Load your decks, choose an existing deck or enter a new name, then choose Save & enable sync."
+  audioRequired: "Word and sentence audio are required. If speech generation fails, the note stays queued and can be retried. Text is sent to Microsoft Edge speech services to generate audio."
+  endpoint: "Local AnkiConnect URL"
+  localOnly: "Only localhost or 127.0.0.1 is supported. No API key or account is needed."
+  deck: "Default deck"
+  loadDecks: "Load decks"
+  connected: "Connected. Your existing decks are available in the deck field."
+  voice: "Edge TTS voice"
+  enable: "Enable Anki sync"
+  saveAndEnable: Save & enable sync
+  saveSettings: "Save settings"
+  settingsSaved: "Anki settings saved."
+  queue: "Saved words"
+  retry: "Retry now"
+  queueDescription: "Saved locally first. Pending words sync when Anki Desktop is available. Repeated words update one note and keep their original sentences."
+  empty: "No saved words yet. Use Save to Anki from a dictionary result or word suggestion."

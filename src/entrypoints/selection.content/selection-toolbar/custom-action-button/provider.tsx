@@ -5,9 +5,7 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CustomActionContent } from "@/components/custom-action/custom-action-content"
 import { CustomActionToolButton } from "@/components/custom-action/custom-action-tool-button"
-import { SaveToNotebaseButton } from "@/components/custom-action/save-to-notebase-button"
-import { isSaveToNotebaseDialogOpenAtom } from "@/components/custom-action/save-to-notebase-dialog-atom"
-import { SaveToNotebaseDialogHost } from "@/components/custom-action/save-to-notebase-dialog-host"
+import { SaveToAnkiButton } from "@/components/custom-action/save-to-anki-button"
 import {
   buildCustomActionExecutionPlan,
   useCustomActionExecution,
@@ -100,7 +98,6 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
   const language = useAtomValue(configFieldsAtomMap.language)
   const setIsSelectionToolbarOpen = useSetAtom(isSelectionToolbarOpenAtom)
   const setConfig = useSetAtom(writeConfigAtom)
-  const isSaveToNotebaseDialogOpen = useAtomValue(isSaveToNotebaseDialogOpenAtom)
   const bodyRef = useRef<HTMLDivElement>(null)
   const pendingOpenRequestRef = useRef<SelectionCustomActionPendingOpenRequest | null>(null)
   const popoverActionsRef = useRef<SelectionPopoverActions | null>(null)
@@ -149,14 +146,15 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
       ),
     [cleanSelection, customActionRequest, paragraphsText, webPageContext],
   )
-  const { error, isRunning, resetSessionState, result, thinking } = useCustomActionExecution({
-    bodyRef,
-    analyticsSurface: sourceSurface,
-    executionContext: executionPlan.executionContext,
-    open: isOpen,
-    popoverSessionKey,
-    rerunNonce,
-  })
+  const { error, isRunning, resetSessionState, result, resultContext, thinking } =
+    useCustomActionExecution({
+      bodyRef,
+      analyticsSurface: sourceSurface,
+      executionContext: executionPlan.executionContext,
+      open: isOpen,
+      popoverSessionKey,
+      rerunNonce,
+    })
   const displayedResult = executionPlan.executionContext ? result : null
   const displayedError = error ?? executionPlan.error
   const displayedIsRunning =
@@ -387,7 +385,6 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
         onAnchorChange={setAnchor}
         actionsRef={popoverActionsRef}
         onReuseRequest={handleReuseRequest}
-        disablePointerDismissal={isSaveToNotebaseDialogOpen}
       >
         <SelectionPopover.Content
           key={popoverSessionKey}
@@ -429,8 +426,14 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
           >
             {activeAction && (
               <>
-                <SaveToNotebaseButton
-                  action={activeAction}
+                <SaveToAnkiButton
+                  key={`${popoverSessionKey}:${rerunNonce}:${activeSession?.id ?? 0}:${activeAction.id}:${customActionRequest.provider?.id}:${layoutTargetCode}`}
+                  action={resultContext?.action ?? activeAction}
+                  context={{
+                    sentence: resultContext?.promptTokens.paragraphs,
+                    sourceTitle: resultContext?.promptTokens.webTitle,
+                    sourceUrl: resultContext?.promptTokens.webUrl,
+                  }}
                   isRunning={displayedIsRunning}
                   result={displayedResult}
                 />
@@ -440,7 +443,6 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
           </CustomActionFooterContent>
         </SelectionPopover.Content>
       </SelectionPopover.Root>
-      <SaveToNotebaseDialogHost />
     </SelectionCustomActionContext>
   )
 }

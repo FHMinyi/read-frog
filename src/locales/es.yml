@@ -311,7 +311,7 @@ options:
         selectionTranslation: Traduce el texto que seleccionas desde la barra de selección.
         inputTranslation: Traduce lo que escribes en un campo de texto antes de enviarlo.
         videoSubtitles: Traduce los subtítulos que aparecen en el reproductor de video.
-        noteSuggestion: Sugiere palabras que vale la pena guardar en tu Notebase después de traducir una selección.
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: Detección de idioma
       description: Afecta la detección de idioma para traducción automática y la precisión de selección de voz.
@@ -617,7 +617,7 @@ options:
         description: Muestra el botón de voz, que lee en voz alta el texto seleccionado
       noteSuggestion:
         title: Sugerencias de notas
-        description: Después de traducir una selección con un proveedor de IA, sugerir palabras para guardar en tu Notebase
+        description: "After translating a selection, suggest words to save to Anki with their original sentences."
         action: Acción
         actionDescription: La acción que genera la sugerencia
         provider: Proveedor
@@ -847,7 +847,7 @@ options:
             5. Traducción de la oración debe traducir únicamente la Oración extraída.
             6. Fonética debe usar la notación estándar del idioma del término (p. ej., IPA para inglés, pinyin para mandarín, romaji para japonés).
             7. Categoría gramatical en inglés (noun, verb, adjective, etc.).
-            8. Dificultad debe ser un nivel CEFR (A1, A2, B1, B2, C1 o C2).
+            8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. Si un campo es desconocido, devuelve una cadena vacía en lugar de adivinar.
             10. Responde en {{targetLanguage}} para todos los campos textuales, salvo que se requiera texto en la forma de origen para mayor claridad.
             11. Término en la oración marca dónde está el término seleccionado dentro de Oración. Es una CADENA que contiene un arreglo JSON compacto de elementos {"text": ...}, cada uno citando Oración carácter por carácter, p. ej. [{"text":"blossoms"}]. Si Oración divide el término en partes separadas (p. ej. "anrufen" en "Er ruft seine Mutter an"), da un elemento por parte, en orden: [{"text":"ruft"},{"text":"an"}]. Escapa correctamente las comillas internas.
@@ -865,7 +865,7 @@ options:
             - Término en la oración: [{"text":"blossoms"}]
             - Definición: 花；花朵（尤指果树的花）
             - Traducción de la oración: 樱花短暂的美丽提醒我们珍惜每一刻。
-            - Dificultad: B2
+            - Dificultad: ""
 
             ### Ejemplo 2
             Entrada: Selección="感動", Párrafos="この映画はつまらないと思ったけど、最後は感動した。", Idioma de destino=inglés
@@ -878,7 +878,7 @@ options:
             - Término en la oración: [{"text":"感動"}]
             - Definición: Being deeply moved; emotional touch
             - Traducción de la oración: I thought this movie was boring, but the ending was moving.
-            - Dificultad: B1
+            - Dificultad: ""
           prompt: |-
             ## Entrada
             Selección: {{selection}}
@@ -898,8 +898,8 @@ options:
           fieldDefinitionDescription: Una definición concisa para el sentido contextual.
           fieldSentenceTranslation: Traducción de la oración
           fieldSentenceTranslationDescription: La traducción únicamente de la Oración.
-          fieldDifficulty: Dificultad
-          fieldDifficultyDescription: Nivel de dificultad CEFR estimado A1, A2, B1, B2, C1 o C2.
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "Leave empty. CET4/CET6 membership is computed from local word lists, never estimated by AI."
         sentenceAnalysis:
           name: "Análisis de oraciones"
           description: "Marca una oración larga como un profesor: su núcleo, cada cláusula y lo que la hace difícil"
@@ -1580,7 +1580,7 @@ action:
   addCustomAction: Añadir acción AI personalizada
 noteSuggestion:
   title: Quizás quieras guardar
-  description: Elige qué palabras guardar en tu Notebase y repásalas cuando quieras.
+  description: "Choose words to save to Anki with their original sentences."
   save: Guardar
   saved: Guardado
   staleSuggestion: Esta sugerencia está desactualizada
@@ -1878,3 +1878,33 @@ languages:
   wls: Wallisiano
   rar: Rarotongano
   hif: Hindi de Fiyi
+
+anki:
+  title: "Anki"
+  description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
+  save: "Save to Anki"
+  saving: "Saving locally…"
+  synced: "Synced to Anki"
+  pending: "Queued for Anki"
+  error: "Needs attention"
+  syncing: "Syncing…"
+  setup: "Set up Anki"
+  savedLocally: "Saved on this device. Set up Anki to sync when Anki Desktop is open."
+  setupAnki: "Create cards with Anki Desktop on this computer. Review on mobile after syncing your collection and media."
+  setupConnect: "Install the AnkiConnect add-on (2055492159), restart Anki, and keep it open. If Anki asks, allow this extension to connect."
+  setupDeck: "Load your decks, choose an existing deck or enter a new name, then choose Save & enable sync."
+  audioRequired: "Word and sentence audio are required. If speech generation fails, the note stays queued and can be retried. Text is sent to Microsoft Edge speech services to generate audio."
+  endpoint: "Local AnkiConnect URL"
+  localOnly: "Only localhost or 127.0.0.1 is supported. No API key or account is needed."
+  deck: "Default deck"
+  loadDecks: "Load decks"
+  connected: "Connected. Your existing decks are available in the deck field."
+  voice: "Edge TTS voice"
+  enable: "Enable Anki sync"
+  saveAndEnable: Save & enable sync
+  saveSettings: "Save settings"
+  settingsSaved: "Anki settings saved."
+  queue: "Saved words"
+  retry: "Retry now"
+  queueDescription: "Saved locally first. Pending words sync when Anki Desktop is available. Repeated words update one note and keep their original sentences."
+  empty: "No saved words yet. Use Save to Anki from a dictionary result or word suggestion."

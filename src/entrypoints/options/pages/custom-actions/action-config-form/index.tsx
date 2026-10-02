@@ -61,7 +61,7 @@ function BuiltInEditor({ action }: { action: SelectionToolbarCustomAction }) {
                 <ActionEditor.Layout.ReadOnly />
               </EntityEditor.Body>
             }
-            notebase={<ActionEditor.NotebaseConnectionField variant="tab" />}
+            notebase={<AnkiConnectionInfo />}
           />
         </EntityEditor.Root>
       </ActionEditor.Form>
@@ -88,7 +88,7 @@ function EditableActionEditor({ action }: { action: SelectionToolbarCustomAction
                 <ActionEditor.Layout.Editable />
               </EntityEditor.Body>
             }
-            notebase={<ActionEditor.NotebaseConnectionField variant="tab" />}
+            notebase={<AnkiConnectionInfo />}
           />
           <EntityEditor.Footer>
             <ActionEditor.DuplicateButton />
@@ -97,5 +97,17 @@ function EditableActionEditor({ action }: { action: SelectionToolbarCustomAction
         </EntityEditor.Root>
       </ActionEditor.Form>
     </CustomActionEditor.Provider>
+  )
+}
+
+function AnkiConnectionInfo() {
+  return (
+    <div className="space-y-3 p-4 text-sm">
+      <p>{i18n.t("anki.description")}</p>
+      <p className="text-muted-foreground">{i18n.t("anki.queueDescription")}</p>
+      <a href="#/anki" className="font-medium text-primary underline">
+        {i18n.t("anki.setup")}
+      </a>
+    </div>
   )
 }

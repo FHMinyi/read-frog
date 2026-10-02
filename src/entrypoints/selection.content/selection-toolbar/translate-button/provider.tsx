@@ -24,7 +24,6 @@ import {
   useRef,
   useState,
 } from "react"
-import { isSaveToNotebaseDialogOpenAtom } from "@/components/custom-action/save-to-notebase-dialog-atom"
 import { useHostedAiProviderOptions } from "@/components/llm-providers/use-hosted-ai-provider-options"
 import { toastManager } from "@/components/ui/base-ui/toast"
 import { SelectionPopover } from "@/components/ui/selection-popover"
@@ -394,7 +393,6 @@ export function SelectionTranslationProvider({ children }: { children: ReactNode
     [providersConfig],
   )
   const translateRequestKey = useMemo(() => JSON.stringify(translateRequest), [translateRequest])
-  const isSaveToNotebaseDialogOpen = useAtomValue(isSaveToNotebaseDialogOpenAtom)
   const {
     suggestion: noteSuggestion,
     maybeFire: maybeFireNoteSuggestion,
@@ -874,7 +872,6 @@ export function SelectionTranslationProvider({ children }: { children: ReactNode
         onAnchorChange={setAnchor}
         actionsRef={popoverActionsRef}
         onReuseRequest={handleReuseRequest}
-        disablePointerDismissal={isSaveToNotebaseDialogOpen}
       >
         {children}
         <SelectionPopover.Content

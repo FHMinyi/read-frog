@@ -13,6 +13,7 @@ import { getRandomUUID } from "@/utils/crypto-polyfill"
 import { resolveNoteSuggestionAction } from "@/utils/custom-actions"
 import { getOrCreateWebPageContext } from "@/utils/host/translate/webpage-context"
 import { getHostedAiTierStatus } from "@/utils/hosted-ai/status"
+import { withDictionaryCet } from "@/utils/layout-host/dictionary-cet"
 import { logger } from "@/utils/logger"
 import { noteSuggestionEnvelopeSchema } from "@/utils/note-suggestion/types"
 import { validateNoteSuggestion } from "@/utils/note-suggestion/validate"
@@ -25,6 +26,7 @@ import { buildNoteSuggestionPrompts } from "./prompt"
 export interface NoteSuggestionSessionResult {
   /** Composite key: popoverSessionKey:translateRequestKey:rerunNonce. */
   sessionKey: string
+  captureContext: { sentence: string; sourceTitle: string; sourceUrl: string }
   validated: ValidatedNoteSuggestion
   /** The configured Note suggestion action as of fire time. */
   actionSnapshot: SelectionToolbarCustomAction
@@ -113,6 +115,11 @@ export function useNoteSuggestion() {
     }
 
     const actionSnapshot = structuredClone(resolveNoteSuggestionAction(config))
+    const captureContext = {
+      sentence: input.paragraphsText || input.selectionText,
+      sourceTitle: input.webTitle,
+      sourceUrl: window.location.href,
+    }
 
     const abortController = new AbortController()
     abortControllerRef.current = abortController
@@ -163,7 +170,7 @@ export function useNoteSuggestion() {
         paragraphs: input.paragraphsText,
         targetLanguage: input.targetLangName,
         webTitle: input.webTitle,
-        webUrl: webPageContext?.url ?? window.location.href,
+        webUrl: captureContext.sourceUrl,
         webContent: webPageContext?.webContent ?? "",
         action: actionSnapshot,
         envelopeContract: provider.kind === "system" ? "hosted" : "local",
@@ -221,7 +228,13 @@ export function useNoteSuggestion() {
 
       setSuggestion({
         sessionKey: input.sessionKey,
-        validated,
+        validated: {
+          ...validated,
+          notes: validated.notes.map((note) =>
+            withDictionaryCet(actionSnapshot.outputSchema, note),
+          ),
+        },
+        captureContext,
         actionSnapshot,
         firedAt,
         analyticsProvider: classifyResolvedProvider(provider),

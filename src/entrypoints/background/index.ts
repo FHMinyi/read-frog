@@ -12,6 +12,7 @@ import { onMessage } from "@/utils/message"
 import { openOptionsPage } from "@/utils/navigation"
 import { SessionCacheGroupRegistry } from "@/utils/session-cache/session-cache-group-registry"
 import { runAiSegmentSubtitles } from "./ai-segmentation"
+import { setupAnkiMessageHandlers } from "./anki"
 import { dispatchBackgroundStreamPort } from "./background-stream"
 import { initializeActionIcons, registerActionIconListeners } from "./browser-action-icon"
 import { ensureInitializedConfig, isFreshInstalledConfig } from "./config"
@@ -31,7 +32,6 @@ import { setupIframeInjection } from "./iframe-injection"
 import { setupLLMGenerateTextMessageHandlers } from "./llm-generate-text"
 import { initMockData } from "./mock-data"
 import { newUserGuide } from "./new-user-guide"
-import { setupNotebasePendingSaveProcessor } from "./notebase-pending-save"
 import { setupPageTranslationHandlers } from "./page-translation"
 import { proxyFetch } from "./proxy-fetch"
 import { setupSidePanelMessageHandler } from "./side-panel"
@@ -151,7 +151,7 @@ export default defineBackground({
     proxyFetch()
     setupHostedAiStatusHandler()
     setupGlossaryMessageHandlers()
-    setupNotebasePendingSaveProcessor(() => backgroundReady)
+    setupAnkiMessageHandlers()
     setupEdgeTTSMessageHandlers()
     setupLLMGenerateTextMessageHandlers()
     setupTTSPlaybackMessageHandlers()

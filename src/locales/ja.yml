@@ -310,7 +310,7 @@ options:
         selectionTranslation: 選択ツールバーから、選択したテキストを翻訳します。
         inputTranslation: 入力欄に書いた文章を、送信する前に翻訳します。
         videoSubtitles: 動画プレーヤーに表示される字幕を翻訳します。
-        noteSuggestion: 選択テキストを翻訳した後、Notebase に保存する価値のある単語を提案します。
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: 言語検出
       description: 自動翻訳の言語検出と読み上げの音声選択精度に影響します。
@@ -616,7 +616,7 @@ options:
         description: 選択したテキストを読み上げる読み上げボタンをツールバーに表示します
       noteSuggestion:
         title: ノートの提案
-        description: AI プロバイダーで選択テキストを翻訳した後、Notebase に保存する単語を提案します
+        description: "After translating a selection, suggest words to save to Anki with their original sentences."
         action: アクション
         actionDescription: 保存候補を生成するアクション
         provider: プロバイダー
@@ -844,7 +844,7 @@ options:
             5. 例文の翻訳では、抜き出した例文だけを翻訳してください。
             6. 発音はその語の言語の標準的な表記を使ってください（例：英語は IPA、中国語はピンイン、日本語はローマ字）。
             7. 品詞は英語で書いてください（noun、verb、adjective など）。
-            8. 難易度は CEFR レベル（A1、A2、B1、B2、C1、C2）のいずれかにしてください。
+            8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. わからない項目は、推測せずに空文字列を返してください。
             10. 原文の形が必要な場合を除き、すべてのテキスト項目は {{targetLanguage}} で答えてください。
             11. 例文中の語形は、選択された語句が例文のどこにあるかを示します。これは {"text": ...} 要素からなるコンパクトな JSON 配列を含む文字列で、各要素は例文を一字一句そのまま引用します。例：[{"text":"blossoms"}]。例文で語句が複数の部分に分かれている場合（例：「Er ruft seine Mutter an」の「anrufen」）は、部分ごとに順番に 1 要素ずつ書いてください：[{"text":"ruft"},{"text":"an"}]。内側の引用符は正しくエスケープしてください。
@@ -895,8 +895,8 @@ options:
           fieldDefinitionDescription: "文脈に合った意味の簡潔な定義を 1 つ。"
           fieldSentenceTranslation: "例文の翻訳"
           fieldSentenceTranslationDescription: "例文だけの翻訳。"
-          fieldDifficulty: "難易度"
-          fieldDifficultyDescription: "推定 CEFR 難易度：A1、A2、B1、B2、C1、C2。"
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "Leave empty. CET4/CET6 membership is computed from local word lists, never estimated by AI."
         sentenceAnalysis:
           name: "構文解析"
           description: "長い文を先生のように書き込み、骨組み・節・つまずきやすい所をひと目で示す"
@@ -1575,7 +1575,7 @@ action:
   addCustomAction: カスタム AI アクションを追加
 noteSuggestion:
   title: 保存におすすめ
-  description: Notebase に保存したい単語を選んで、いつでも復習できます。
+  description: "Choose words to save to Anki with their original sentences."
   save: 保存
   saved: 保存済み
   staleSuggestion: この提案は古くなっています
@@ -1873,3 +1873,33 @@ languages:
   wls: ウォリス語
   rar: ラロトンガ語
   hif: フィジー・ヒンディー語
+
+anki:
+  title: "Anki"
+  description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
+  save: "Save to Anki"
+  saving: "Saving locally…"
+  synced: "Synced to Anki"
+  pending: "Queued for Anki"
+  error: "Needs attention"
+  syncing: "Syncing…"
+  setup: "Set up Anki"
+  savedLocally: "Saved on this device. Set up Anki to sync when Anki Desktop is open."
+  setupAnki: "Create cards with Anki Desktop on this computer. Review on mobile after syncing your collection and media."
+  setupConnect: "Install the AnkiConnect add-on (2055492159), restart Anki, and keep it open. If Anki asks, allow this extension to connect."
+  setupDeck: "Load your decks, choose an existing deck or enter a new name, then choose Save & enable sync."
+  audioRequired: "Word and sentence audio are required. If speech generation fails, the note stays queued and can be retried. Text is sent to Microsoft Edge speech services to generate audio."
+  endpoint: "Local AnkiConnect URL"
+  localOnly: "Only localhost or 127.0.0.1 is supported. No API key or account is needed."
+  deck: "Default deck"
+  loadDecks: "Load decks"
+  connected: "Connected. Your existing decks are available in the deck field."
+  voice: "Edge TTS voice"
+  enable: "Enable Anki sync"
+  saveAndEnable: Save & enable sync
+  saveSettings: "Save settings"
+  settingsSaved: "Anki settings saved."
+  queue: "Saved words"
+  retry: "Retry now"
+  queueDescription: "Saved locally first. Pending words sync when Anki Desktop is available. Repeated words update one note and keep their original sentences."
+  empty: "No saved words yet. Use Save to Anki from a dictionary result or word suggestion."

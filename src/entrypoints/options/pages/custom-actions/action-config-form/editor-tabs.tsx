@@ -1,11 +1,10 @@
 import type { CustomActionEditorTab } from "@/utils/navigation"
 import { useSelector } from "@tanstack/react-store"
 import { useAtom } from "jotai"
-import { useMemo, useRef } from "react"
+import { useRef } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/base-ui/tabs"
 import { i18n } from "@/utils/i18n"
 import { CUSTOM_ACTION_NOTEBASE_SECTION_ID } from "@/utils/navigation"
-import { sanitizeCustomActionNotebaseConnection } from "@/utils/notebase/connection"
 import { cn } from "@/utils/styles/utils"
 import { customActionEditorTabAtom } from "../atoms"
 import { useActionEditor } from "./action-editor"
@@ -42,24 +41,6 @@ function ConfigTabStatus() {
     ),
   )
   return hasErrors ? <StatusDot tone="destructive" label={t("hasErrors")} /> : null
-}
-
-function NotebaseTabStatus() {
-  const { form } = useActionEditor().state
-  const outputSchema = useSelector(form.store, (state) => state.values.outputSchema)
-  const connection = useSelector(form.store, (state) => state.values.notebaseConnection)
-  const sanitized = useMemo(
-    () => sanitizeCustomActionNotebaseConnection(connection, outputSchema),
-    [connection, outputSchema],
-  )
-
-  // A connection the sanitizer rejects outright reads as "not connected" in the tab too.
-  if (!connection || !sanitized) return null
-  // Dropped mappings point at a deleted field or collide with another; saving would skip them.
-  if (sanitized.mappings.length < connection.mappings.length) {
-    return <StatusDot tone="destructive" label={t("needsAttention")} />
-  }
-  return <StatusDot tone="neutral" label={t("connected")} />
 }
 
 /**
@@ -105,8 +86,7 @@ export function ActionEditorTabs({
             value="notebase"
             className={cn("flex-none px-1", SCROLL_MARGIN)}
           >
-            {t("notebase")}
-            <NotebaseTabStatus />
+            {i18n.t("anki.title")}
           </TabsTrigger>
         </TabsList>
       </div>

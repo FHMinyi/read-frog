@@ -310,7 +310,7 @@ options:
         selectionTranslation: Переводит выделенный текст через панель выделения.
         inputTranslation: Переводит то, что вы набрали в поле ввода, перед отправкой.
         videoSubtitles: Переводит субтитры, которые появляются в видеоплеере.
-        noteSuggestion: Предлагает слова, которые стоит сохранить в Notebase, после перевода выделенного текста.
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: Определение языка
       description: Влияет на точность определения языка для автоперевода и выбора голоса озвучивания.
@@ -616,7 +616,7 @@ options:
         description: Показывать кнопку озвучивания, которая читает выделенный текст вслух
       noteSuggestion:
         title: Подсказки для заметок
-        description: После перевода выделенного текста с помощью ИИ-провайдера предлагать слова для сохранения в Notebase
+        description: "After translating a selection, suggest words to save to Anki with their original sentences."
         action: Действие
         actionDescription: Действие, которое формирует предложение
         provider: Провайдер
@@ -844,7 +844,7 @@ options:
             5. Перевод предложения должен переводить только извлечённое Предложение.
             6. Транскрипция должна использовать стандартную запись для языка слова (например, IPA для английского, пиньинь для китайского, ромадзи для японского).
             7. Часть речи указывайте на английском (noun, verb, adjective и т. д.).
-            8. Сложность должна быть уровнем CEFR (A1, A2, B1, B2, C1 или C2).
+            8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. Если значение поля неизвестно, верните пустую строку, а не догадку.
             10. Отвечайте на языке {{targetLanguage}} во всех текстовых полях, если только для ясности не требуется текст в исходной форме.
             11. Форма в предложении отмечает, где выбранное слово стоит в Предложении. Это СТРОКА, содержащая компактный JSON-массив элементов {"text": ...}, каждый из которых дословно цитирует Предложение, например [{"text":"blossoms"}]. Если Предложение разделяет слово на отдельные части (например, «anrufen» в «Er ruft seine Mutter an»), дайте по одному элементу на каждую часть, по порядку: [{"text":"ruft"},{"text":"an"}]. Правильно экранируйте внутренние кавычки.
@@ -862,7 +862,7 @@ options:
             - Форма в предложении: [{"text":"blossoms"}]
             - Значение: 花；花朵（尤指果树的花）
             - Перевод предложения: 樱花短暂的美丽提醒我们珍惜每一刻。
-            - Сложность: B2
+            - Сложность: ""
 
             ### Пример 2
             Ввод: Выделение="感動", Абзацы="この映画はつまらないと思ったけど、最後は感動した。", Целевой язык=английский
@@ -875,7 +875,7 @@ options:
             - Форма в предложении: [{"text":"感動"}]
             - Значение: Being deeply moved; emotional touch
             - Перевод предложения: I thought this movie was boring, but the ending was moving.
-            - Сложность: B1
+            - Сложность: ""
           prompt: |-
             ## Ввод
             Выделение: {{selection}}
@@ -895,8 +895,8 @@ options:
           fieldDefinitionDescription: "Одно краткое определение для значения в контексте."
           fieldSentenceTranslation: "Перевод предложения"
           fieldSentenceTranslationDescription: "Перевод только Предложения."
-          fieldDifficulty: "Сложность"
-          fieldDifficultyDescription: "Оценка уровня сложности CEFR: A1, A2, B1, B2, C1 или C2."
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "Leave empty. CET4/CET6 membership is computed from local word lists, never estimated by AI."
         sentenceAnalysis:
           name: "Разбор предложения"
           description: "Размечает длинное предложение, как учитель: основа, все придаточные и трудные места"
@@ -1575,7 +1575,7 @@ action:
   addCustomAction: Добавить своё AI-действие
 noteSuggestion:
   title: Стоит сохранить
-  description: Выберите слова для сохранения в Notebase и повторяйте их в любое время.
+  description: "Choose words to save to Anki with their original sentences."
   save: Сохранить
   saved: Сохранено
   staleSuggestion: Это предложение устарело
@@ -1873,3 +1873,33 @@ languages:
   wls: Уоллисский
   rar: Раротонганский
   hif: Фиджийский хинди
+
+anki:
+  title: "Anki"
+  description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
+  save: "Save to Anki"
+  saving: "Saving locally…"
+  synced: "Synced to Anki"
+  pending: "Queued for Anki"
+  error: "Needs attention"
+  syncing: "Syncing…"
+  setup: "Set up Anki"
+  savedLocally: "Saved on this device. Set up Anki to sync when Anki Desktop is open."
+  setupAnki: "Create cards with Anki Desktop on this computer. Review on mobile after syncing your collection and media."
+  setupConnect: "Install the AnkiConnect add-on (2055492159), restart Anki, and keep it open. If Anki asks, allow this extension to connect."
+  setupDeck: "Load your decks, choose an existing deck or enter a new name, then choose Save & enable sync."
+  audioRequired: "Word and sentence audio are required. If speech generation fails, the note stays queued and can be retried. Text is sent to Microsoft Edge speech services to generate audio."
+  endpoint: "Local AnkiConnect URL"
+  localOnly: "Only localhost or 127.0.0.1 is supported. No API key or account is needed."
+  deck: "Default deck"
+  loadDecks: "Load decks"
+  connected: "Connected. Your existing decks are available in the deck field."
+  voice: "Edge TTS voice"
+  enable: "Enable Anki sync"
+  saveAndEnable: Save & enable sync
+  saveSettings: "Save settings"
+  settingsSaved: "Anki settings saved."
+  queue: "Saved words"
+  retry: "Retry now"
+  queueDescription: "Saved locally first. Pending words sync when Anki Desktop is available. Repeated words update one note and keep their original sentences."
+  empty: "No saved words yet. Use Save to Anki from a dictionary result or word suggestion."

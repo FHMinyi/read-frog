@@ -3,7 +3,7 @@ import type { NoteSuggestionNoteRecord } from "@/utils/note-suggestion/types"
 import { IconBookmarkPlus } from "@tabler/icons-react"
 import { useAtom } from "jotai"
 import { useEffect, useId, useState } from "react"
-import { useSaveToNotebase } from "@/components/custom-action/use-save-to-notebase"
+import { useSaveToAnki } from "@/components/anki/use-anki"
 import { Button } from "@/components/ui/base-ui/button"
 import { Checkbox } from "@/components/ui/base-ui/checkbox"
 import {
@@ -16,11 +16,11 @@ import {
 import { Label } from "@/components/ui/base-ui/label"
 import { Switch } from "@/components/ui/base-ui/switch"
 import { toastManager } from "@/components/ui/base-ui/toast"
+import { captureFromResult } from "@/utils/anki/capture"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
-import { findSelectionToolbarAction } from "@/utils/custom-actions"
 import { i18n } from "@/utils/i18n"
+import { openOptionsPage } from "@/utils/navigation"
 import { trackNoteSuggestionEvent } from "@/utils/note-suggestion/analytics"
-import { getOutputSchemaFingerprint } from "@/utils/notebase/pending-save"
 
 function formatNoteValue(value: string | number | null): string | null {
   if (value === null) {
@@ -82,8 +82,8 @@ export function NoteSuggestionCard({
 }) {
   const { sessionKey, validated, actionSnapshot, firedAt, analyticsProvider } = suggestion
   const [selectionToolbar, setSelectionToolbar] = useAtom(configFieldsAtomMap.selectionToolbar)
-  const { save, isSaving } = useSaveToNotebase()
-  const [saveState, setSaveState] = useState<"idle" | "saved" | "stale">("idle")
+  const { save, isSaving, status, snapshot, error } = useSaveToAnki()
+  const [saveState, setSaveState] = useState<"idle" | "saved">("idle")
   const checkboxBaseId = useId()
   const [selectedNoteIndexes, setSelectedNoteIndexes] = useState(
     () => new Set(validated.notes.map((_note, index) => index)),
@@ -123,29 +123,25 @@ export function NoteSuggestionCard({
   const selectedNotes = validated.notes.filter((_note, index) => selectedNoteIndexes.has(index))
 
   const handleSave = async () => {
-    const liveAction = findSelectionToolbarAction(selectionToolbar, actionSnapshot.id)
-    if (
-      !liveAction ||
-      getOutputSchemaFingerprint(liveAction.outputSchema) !==
-        getOutputSchemaFingerprint(actionSnapshot.outputSchema)
-    ) {
-      toastManager.add({ type: "error", title: i18n.t("noteSuggestion.staleSuggestion") })
-      setSaveState("stale")
-      return
+    let saved = false
+    try {
+      saved = await save(
+        selectedNotes.map((note) =>
+          captureFromResult(actionSnapshot, note, suggestion.captureContext),
+        ),
+      )
+    } catch (caught) {
+      toastManager.add({
+        type: "error",
+        title: caught instanceof Error ? caught.message : String(caught),
+      })
     }
-
-    const outcome = await save({
-      action: liveAction,
-      results: selectedNotes,
-      analyticsSource: "note_suggestion",
-      analyticsProvider,
-    })
-    if (outcome === "saved") {
+    if (saved) {
       setSaveState("saved")
       trackNoteSuggestionEvent({
         action_id: "suggestion_accepted",
         startedAt: firedAt,
-        action_name: liveAction.name,
+        action_name: actionSnapshot.name,
         provider: analyticsProvider,
       })
     }
@@ -154,10 +150,14 @@ export function NoteSuggestionCard({
   const isInteractionDisabled = isSaving || saveState !== "idle"
   const isButtonDisabled = isInteractionDisabled || selectedNotes.length === 0
   const buttonLabel = isSaving
-    ? i18n.t("action.saveToNotebaseSaving")
+    ? i18n.t("anki.saving")
     : saveState === "saved"
-      ? i18n.t("noteSuggestion.saved")
-      : i18n.t("noteSuggestion.save")
+      ? status === "synced"
+        ? i18n.t("anki.synced")
+        : status === "error"
+          ? i18n.t("anki.error")
+          : i18n.t("anki.pending")
+      : i18n.t("anki.save")
 
   return (
     <div
@@ -214,7 +214,27 @@ export function NoteSuggestionCard({
           />
         ))}
       </div>
-      <div className="flex justify-end">
+      {error && (
+        <p role="alert" className="text-xs text-destructive">
+          {error}
+        </p>
+      )}
+      {snapshot && !snapshot.settings.enabled && (
+        <p role="status" className="text-xs text-muted-foreground">
+          {i18n.t("anki.savedLocally")}
+        </p>
+      )}
+      <div className="flex justify-end gap-2">
+        {snapshot && (!snapshot.settings.enabled || status === "error") && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => void openOptionsPage({ route: "/anki" })}
+          >
+            {i18n.t("anki.setup")}
+          </Button>
+        )}
         <Button
           type="button"
           variant="brand"

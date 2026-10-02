@@ -1,12 +1,10 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react"
 import type { NoteSuggestionSessionResult } from "../use-note-suggestion"
-import type { Config } from "@/types/config/config"
 import type { SelectionToolbarCustomAction } from "@/types/config/selection-toolbar"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { createStore, Provider } from "jotai"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { storage } from "#imports"
 import { configAtom } from "@/utils/atoms/config"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
 import { i18n } from "@/utils/i18n"
@@ -15,257 +13,138 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn<(...args: any[]) => any>(),
   toastAdd: vi.fn<(...args: any[]) => any>(),
   track: vi.fn<(...args: any[]) => any>(),
+  state: {
+    status: "idle",
+    snapshot: null as { settings: { enabled: boolean }; entries?: unknown[] } | null,
+    error: null,
+  },
 }))
-
-vi.mock("@/components/custom-action/use-save-to-notebase", () => ({
-  useSaveToNotebase: () => ({ save: mocks.save, isSaving: false }),
+vi.mock("@/components/anki/use-anki", () => ({
+  useSaveToAnki: () => ({ save: mocks.save, isSaving: false, ...mocks.state }),
 }))
-
-vi.mock("@/components/ui/base-ui/toast", () => ({
-  toastManager: { add: mocks.toastAdd },
-}))
-
+vi.mock("@/components/ui/base-ui/toast", () => ({ toastManager: { add: mocks.toastAdd } }))
 vi.mock("@/utils/note-suggestion/analytics", () => ({
-  trackNoteSuggestionEvent: (...args: any[]) => mocks.track(...args),
+  trackNoteSuggestionEvent: (...args: unknown[]) => mocks.track(...args),
 }))
-
+vi.mock("@/utils/auth/auth-client", () => ({
+  authClient: {
+    useSession: () => {
+      throw new Error("Anki must not request an official account")
+    },
+  },
+}))
 const { NoteSuggestionCard } = await import("../note-suggestion-card")
 
-function wrapper(store: ReturnType<typeof createStore>) {
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return <Provider store={store}>{children}</Provider>
-  }
-}
-
-function createAction(
-  overrides: Partial<SelectionToolbarCustomAction> = {},
-): SelectionToolbarCustomAction {
+function createAction(): SelectionToolbarCustomAction {
   return {
     id: "save-action",
     name: "Dictionary",
     enabled: true,
     icon: "tabler:book-2",
-    providerId: "read-frog-free-ai",
+    providerId: "test",
     systemPrompt: "system",
     prompt: "prompt",
     outputSchema: [
-      {
-        id: "field-term",
-        name: "Term",
-        type: "string",
-        description: "",
-      },
-      {
-        id: "field-definition",
-        name: "Definition",
-        type: "string",
-        description: "",
-      },
-    ],
-    ...overrides,
+      ["term", "Term"],
+      ["definition", "Definition"],
+    ].map(([id, name]) => ({
+      id: `dictionary-${id}`,
+      name: name!,
+      type: "string",
+      description: "",
+    })),
   }
 }
-
-function createSuggestion(
-  actionSnapshot: SelectionToolbarCustomAction,
-  notes: Array<Record<string, string | number | null>> = [
-    { Term: "ephemeral", Definition: "lasting a very short time" },
-  ],
-): NoteSuggestionSessionResult {
-  return {
+const notes = [
+  { Term: "ephemeral", Definition: "lasting a very short time" },
+  { Term: "transient", Definition: "not permanent" },
+]
+function renderCard({
+  deleted = false,
+  changed = false,
+}: { deleted?: boolean; changed?: boolean } = {}) {
+  const actionSnapshot = createAction()
+  const store = createStore()
+  const config = structuredClone(DEFAULT_CONFIG)
+  config.selectionToolbar.customActions = deleted
+    ? []
+    : [{ ...actionSnapshot, ...(changed ? { outputSchema: [], name: "New action" } : {}) }]
+  store.set(configAtom, config)
+  const suggestion: NoteSuggestionSessionResult = {
     sessionKey: "session-1",
-    validated: {
-      notes,
-      summaryFieldName: "Definition",
-    },
+    validated: { notes, summaryFieldName: "Definition" },
     actionSnapshot,
+    captureContext: {
+      sentence: "The ephemeral moment was transient.",
+      sourceTitle: "Original page",
+      sourceUrl: "https://example.com/original",
+    },
     firedAt: 100,
     analyticsProvider: { provider: "openai", backend_kind: "llm" },
   }
-}
-
-function createStoreWithAction(action?: SelectionToolbarCustomAction) {
-  const store = createStore()
-  const config = structuredClone(DEFAULT_CONFIG)
-  config.selectionToolbar.customActions = action ? [action] : []
-  config.selectionToolbar.noteSuggestion.actionId = action?.id ?? "default-dictionary"
-  store.set(configAtom, config)
-  return store
-}
-
-function renderCard(
-  store: ReturnType<typeof createStore>,
-  actionSnapshot: SelectionToolbarCustomAction,
-  notes?: Array<Record<string, string | number | null>>,
-) {
-  return render(
-    <NoteSuggestionCard
-      suggestion={createSuggestion(actionSnapshot, notes)}
-      markShownOnce={() => false}
-    />,
-    { wrapper: wrapper(store) },
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <Provider store={store}>{children}</Provider>
   )
+  return render(<NoteSuggestionCard suggestion={suggestion} markShownOnce={() => false} />, {
+    wrapper,
+  })
 }
-
 function clickSave() {
-  fireEvent.click(screen.getByRole("button", { name: i18n.t("noteSuggestion.save") }))
+  fireEvent.click(screen.getByRole("button", { name: i18n.t("anki.save") }))
 }
 
-describe("NoteSuggestionCard", () => {
+describe("NoteSuggestionCard Anki save", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.save.mockResolvedValue("saved")
+    mocks.save.mockResolvedValue(true)
+    mocks.state.status = "idle"
+    mocks.state.snapshot = null
   })
-
-  it("saves through the same action after it is disabled", async () => {
-    const snapshot = createAction({ enabled: true })
-    const liveAction = createAction({ enabled: false })
-    const store = createStoreWithAction(liveAction)
-    renderCard(store, snapshot)
-
+  it("queues only checked words with generation-time page and sentence snapshots without an account", async () => {
+    renderCard()
+    fireEvent.click(screen.getByRole("checkbox", { name: /transient not permanent/ }))
     clickSave()
-
     await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
-    expect(mocks.save).toHaveBeenCalledWith({
-      action: liveAction,
-      results: [{ Term: "ephemeral", Definition: "lasting a very short time" }],
-      analyticsSource: "note_suggestion",
-      analyticsProvider: { provider: "openai", backend_kind: "llm" },
-    })
-    expect(mocks.toastAdd).not.toHaveBeenCalled()
-  })
-
-  it("selects every suggested note by default and saves only the checked notes", async () => {
-    const action = createAction()
-    const store = createStoreWithAction(action)
-    renderCard(store, action, [
-      { Term: "ephemeral", Definition: "lasting a very short time" },
-      { Term: "transient", Definition: "not permanent" },
-    ])
-
-    const checkboxes = screen.getAllByRole("checkbox")
-    expect(checkboxes).toHaveLength(2)
-    expect(checkboxes[0]).toBeChecked()
-    expect(checkboxes[1]).toBeChecked()
-    expect(checkboxes[0]?.closest('[data-slot="field-label"]')?.firstElementChild).toHaveAttribute(
-      "data-slot",
-      "field",
-    )
-
-    fireEvent.click(screen.getByRole("checkbox", { name: /transient/ }))
-    clickSave()
-
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
-    expect(mocks.save.mock.calls[0]?.[0]?.results).toEqual([
-      { Term: "ephemeral", Definition: "lasting a very short time" },
-    ])
-  })
-
-  it("disables saving when every suggested note is unchecked", () => {
-    const action = createAction()
-    const store = createStoreWithAction(action)
-    renderCard(store, action)
-
-    fireEvent.click(screen.getByRole("checkbox", { name: /ephemeral/ }))
-
-    const saveButton = screen.getByRole("button", { name: i18n.t("noteSuggestion.save") })
-    expect(saveButton).toBeDisabled()
-    fireEvent.click(saveButton)
-    expect(mocks.save).not.toHaveBeenCalled()
-  })
-
-  it("marks the suggestion stale when its action was deleted", async () => {
-    const snapshot = createAction()
-    const store = createStoreWithAction()
-    renderCard(store, snapshot)
-
-    clickSave()
-
-    await waitFor(() =>
-      expect(mocks.toastAdd).toHaveBeenCalledWith({
-        type: "error",
-        title: i18n.t("noteSuggestion.staleSuggestion"),
+    expect(mocks.save).toHaveBeenCalledWith([
+      expect.objectContaining({
+        term: "ephemeral",
+        sentence: "The ephemeral moment was transient.",
+        sourceTitle: "Original page",
+        sourceUrl: "https://example.com/original",
       }),
+    ])
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: i18n.t("anki.pending") })).toBeDisabled(),
     )
+  })
+  it("disables saving when nothing is selected", () => {
+    renderCard()
+    for (const checkbox of screen.getAllByRole("checkbox")) fireEvent.click(checkbox)
+    expect(screen.getByRole("button", { name: i18n.t("anki.save") })).toBeDisabled()
     expect(mocks.save).not.toHaveBeenCalled()
   })
-
-  it("marks the suggestion stale when the action schema changed", async () => {
-    const snapshot = createAction()
-    const liveAction = createAction({
-      outputSchema: [
-        {
-          id: "field-word",
-          name: "Word",
-          type: "string",
-          description: "",
-        },
-      ],
-    })
-    const store = createStoreWithAction(liveAction)
-    renderCard(store, snapshot)
-
+  it.each([{ deleted: true }, { changed: true }])(
+    "keeps the original schema when live action changes: %o",
+    async (options) => {
+      renderCard(options)
+      clickSave()
+      await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
+      expect(mocks.save.mock.calls[0]?.[0]).toHaveLength(2)
+      expect(mocks.toastAdd).not.toHaveBeenCalled()
+    },
+  )
+  it("shows setup after local persistence with sync disabled", async () => {
+    mocks.state.snapshot = { settings: { enabled: false }, entries: [] }
+    renderCard()
     clickSave()
-
-    await waitFor(() => expect(mocks.toastAdd).toHaveBeenCalledTimes(1))
-    expect(mocks.save).not.toHaveBeenCalled()
+    await waitFor(() => expect(screen.getByText(i18n.t("anki.savedLocally"))).toBeVisible())
+    expect(screen.getByRole("button", { name: i18n.t("anki.setup") })).toBeEnabled()
   })
-
-  it("uses the live action when identity, provider, and connection changed but schema did not", async () => {
-    const snapshot = createAction()
-    const liveAction = createAction({
-      name: "Live Dictionary",
-      providerId: "new-provider",
-      notebaseConnection: {
-        notebaseId: "notebase-live",
-        notebaseNameSnapshot: "Live Notes",
-        connectedAccount: {
-          id: "account-live",
-          name: "Reader",
-          email: "reader@example.com",
-          image: null,
-        },
-        mappings: [
-          {
-            id: "mapping-live",
-            localFieldId: "field-term",
-            notebaseColumnId: "column-live",
-            notebaseColumnNameSnapshot: "Term",
-          },
-        ],
-      },
-    })
-    const store = createStoreWithAction(liveAction)
-    renderCard(store, snapshot)
-
+  it("allows a retry after enqueue failed", async () => {
+    mocks.save.mockResolvedValue(false)
+    renderCard()
     clickSave()
-
     await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1))
-    expect(mocks.save.mock.calls[0]?.[0]?.action).toEqual(liveAction)
-    expect(mocks.toastAdd).not.toHaveBeenCalled()
-  })
-
-  it("preserves the selected action when toggling Note suggestion", async () => {
-    const action = createAction()
-    const store = createStoreWithAction(action)
-    await storage.setItem("local:config", store.get(configAtom))
-    renderCard(store, action)
-
-    fireEvent.click(screen.getByRole("switch"))
-
-    const expectedNoteSuggestion = {
-      enabled: false,
-      actionId: action.id,
-      providerId: DEFAULT_CONFIG.selectionToolbar.noteSuggestion.providerId,
-    }
-    await waitFor(() => {
-      expect(store.get(configAtom).selectionToolbar.noteSuggestion).toEqual(expectedNoteSuggestion)
-    })
-    await waitFor(async () => {
-      expect(
-        (await storage.getItem<Config>("local:config"))?.selectionToolbar.noteSuggestion,
-      ).toEqual(expectedNoteSuggestion)
-    })
-    await storage.removeItem("local:config")
+    expect(screen.getByRole("button", { name: i18n.t("anki.save") })).toBeEnabled()
   })
 })

@@ -311,7 +311,7 @@ options:
         selectionTranslation: Translates the text you select from the selection toolbar.
         inputTranslation: Translates what you type into an input box before you send it.
         videoSubtitles: Translates subtitles as they appear in a video player.
-        noteSuggestion: Suggests words worth saving to your Notebase after a selection translation.
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: Language detection
       description: Affects auto-translate language detection and Speaking voice selection accuracy.
@@ -617,7 +617,7 @@ options:
         description: Show the speak button, which reads the selected text aloud
       noteSuggestion:
         title: Note suggestions
-        description: After selection translation with an AI provider, suggest words to save to your Notebase
+        description: "After translating a selection, suggest words to save to Anki with their original sentences."
         action: Action
         actionDescription: The action that produces the suggestion
         provider: Provider
@@ -852,7 +852,7 @@ options:
             5. Sentence Translation must translate only the extracted Sentence.
             6. Phonetic must use the standard notation for the term's language (e.g., IPA for English, pinyin for Mandarin, romaji for Japanese).
             7. Part of Speech in English (noun, verb, adjective, etc.).
-            8. Difficulty must be a CEFR level (A1, A2, B1, B2, C1, or C2).
+            8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. If a field is unknown, return an empty string instead of guessing.
             10. Respond in {{targetLanguage}} for all textual fields unless source-form text is required for clarity.
             11. Term in Sentence marks where the selected term stands in Sentence. It is a STRING containing a compact JSON array of {"text": ...} items, each quoting Sentence character for character, e.g. [{"text":"blossoms"}]. If Sentence splits the term into separate parts (e.g. "anrufen" in "Er ruft seine Mutter an"), give one item per part, in order: [{"text":"ruft"},{"text":"an"}]. Escape the inner quotes correctly.
@@ -870,7 +870,7 @@ options:
             - Term in Sentence: [{"text":"blossoms"}]
             - Definition: 花；花朵（尤指果树的花）
             - Sentence Translation: 樱花短暂的美丽提醒我们珍惜每一刻。
-            - Difficulty: B2
+            - Difficulty: ""
 
             ### Example 2
             Input: Selection="感動", Paragraphs="この映画はつまらないと思ったけど、最後は感動した。", Target language=English
@@ -883,7 +883,7 @@ options:
             - Term in Sentence: [{"text":"感動"}]
             - Definition: Being deeply moved; emotional touch
             - Sentence Translation: I thought this movie was boring, but the ending was moving.
-            - Difficulty: B1
+            - Difficulty: ""
           prompt: |-
             ## Input
             Selection: {{selection}}
@@ -903,8 +903,8 @@ options:
           fieldDefinitionDescription: One concise definition for the contextual sense.
           fieldSentenceTranslation: Sentence Translation
           fieldSentenceTranslationDescription: The translation of Sentence only.
-          fieldDifficulty: Difficulty
-          fieldDifficultyDescription: Estimated CEFR difficulty level A1, A2, B1, B2, C1, or C2.
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "Leave empty. CET4/CET6 membership is computed from local word lists, never estimated by AI."
         sentenceAnalysis:
           name: "Sentence Analysis"
           description: "Mark up a long sentence like a teacher: its core, every clause, and what makes it hard"
@@ -1722,7 +1722,7 @@ action:
   addCustomAction: Add custom AI action
 noteSuggestion:
   title: You might want to save
-  description: Choose which words to save to your Notebase and review anytime.
+  description: "Choose words to save to Anki with their original sentences."
   save: Save
   saved: Saved
   staleSuggestion: This suggestion is out of date
@@ -2020,3 +2020,33 @@ languages:
   wls: Wallisian
   rar: Rarotongan
   hif: Fiji Hindi
+
+anki:
+  title: "Anki"
+  description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
+  save: "Save to Anki"
+  saving: "Saving locally…"
+  synced: "Synced to Anki"
+  pending: "Queued for Anki"
+  error: "Needs attention"
+  syncing: "Syncing…"
+  setup: "Set up Anki"
+  savedLocally: "Saved on this device. Set up Anki to sync when Anki Desktop is open."
+  setupAnki: "Create cards with Anki Desktop on this computer. Review on mobile after syncing your collection and media."
+  setupConnect: "Install the AnkiConnect add-on (2055492159), restart Anki, and keep it open. If Anki asks, allow this extension to connect."
+  setupDeck: "Load your decks, choose an existing deck or enter a new name, then choose Save & enable sync."
+  audioRequired: "Word and sentence audio are required. If speech generation fails, the note stays queued and can be retried. Text is sent to Microsoft Edge speech services to generate audio."
+  endpoint: "Local AnkiConnect URL"
+  localOnly: "Only localhost or 127.0.0.1 is supported. No API key or account is needed."
+  deck: "Default deck"
+  loadDecks: "Load decks"
+  connected: "Connected. Your existing decks are available in the deck field."
+  voice: "Edge TTS voice"
+  enable: "Enable Anki sync"
+  saveAndEnable: Save & enable sync
+  saveSettings: "Save settings"
+  settingsSaved: "Anki settings saved."
+  queue: "Saved words"
+  retry: "Retry now"
+  queueDescription: "Saved locally first. Pending words sync when Anki Desktop is available. Repeated words update one note and keep their original sentences."
+  empty: "No saved words yet. Use Save to Anki from a dictionary result or word suggestion."

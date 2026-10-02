@@ -311,7 +311,7 @@ options:
         selectionTranslation: 通过划词工具栏翻译你选中的文本。
         inputTranslation: 在发送前翻译你写在输入框里的内容。
         videoSubtitles: 翻译视频播放器中随播放出现的字幕。
-        noteSuggestion: 划词翻译后，推荐值得存入笔记库的词条。
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: 语言检测
       description: 影响自动翻译语言检测和朗读语音选择的准确性。
@@ -617,7 +617,7 @@ options:
         description: 在工具栏中显示朗读按钮，用于朗读选中的文本
       noteSuggestion:
         title: 猜你想存
-        description: 使用 AI 提供商进行划词翻译后，推荐可存入笔记库的词条
+        description: "使用 AI 服务翻译选中文字后，推荐值得保存到 Anki 的单词。"
         action: 指令
         actionDescription: 用于生成「猜你想存」的指令
         provider: 提供商
@@ -852,7 +852,7 @@ options:
             5. “句子翻译”字段只翻译所提取的句子。
             6. 音标必须使用该语言的标准标注（如英语用 IPA，中文用拼音，日语用罗马字）。
             7. 词性使用英文（noun, verb, adjective 等）。
-            8. 难度必须是 CEFR 等级（A1, A2, B1, B2, C1, 或 C2）。
+            8. 词表标签字段留空。Read Frog 会在本地查询 CET4/CET6 词表，不要估计语言等级。
             9. 如果某个字段未知，返回空字符串而非猜测。
             10. 除非需要保留原文形式，所有文本字段均使用 {{targetLanguage}} 作答。
             11. “句中词形”字段标出选中词语在“句子”中的位置：它是一个字符串，内容是紧凑的 JSON 数组，每项为 {"text": ...}，逐字引用“句子”中的原文，例如 [{"text":"blossoms"}]。如果“句子”把词语拆成了几部分（例如德语 "anrufen" 在 "Er ruft seine Mutter an" 中），按顺序每部分一项：[{"text":"ruft"},{"text":"an"}]。注意正确转义内部的引号。
@@ -903,8 +903,8 @@ options:
           fieldDefinitionDescription: 针对语境含义的一条简洁释义。
           fieldSentenceTranslation: 句子翻译
           fieldSentenceTranslationDescription: 只翻译提取出的句子。
-          fieldDifficulty: 难度
-          fieldDifficultyDescription: 预估 CEFR 难度等级：A1、A2、B1、B2、C1 或 C2。
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "留空。CET4/CET6 标签由本地词表查询得出，不由 AI 估计。"
         sentenceAnalysis:
           name: "长难句分析"
           description: "像老师一样批注长难句：主干、从句和难点一目了然"
@@ -1585,7 +1585,7 @@ action:
   addCustomAction: 添加自定义 AI 指令
 noteSuggestion:
   title: 猜你想存
-  description: 选择要存入笔记库的词，将来随时复习
+  description: "选择要保存到 Anki 的单词，保留原句以便复习。"
   save: 保存
   saved: 已保存
   staleSuggestion: 该建议已过期
@@ -1883,3 +1883,33 @@ languages:
   wls: 瓦利斯语
   rar: 拉罗汤加语
   hif: 斐济印地语
+
+anki:
+  title: "Anki"
+  description: "将英语单词及原句保存到 Anki 桌面版，无需 Read Frog 账号。"
+  save: "保存到 Anki"
+  saving: "正在保存到本地…"
+  synced: "已同步到 Anki"
+  pending: "等待同步到 Anki"
+  error: "需要处理"
+  syncing: "正在同步…"
+  setup: "配置 Anki"
+  savedLocally: "已保存在此设备。请配置并打开 Anki 桌面版以开始同步。"
+  setupAnki: "在此电脑上打开 Anki 桌面版制卡；同步牌组和媒体文件后，可在手机上离线复习。"
+  setupConnect: "安装 AnkiConnect 插件（2055492159），重启并保持 Anki 开启。如果 Anki 弹出询问，请允许此扩展连接。"
+  setupDeck: "加载牌组后选择现有牌组或输入新名称，再点击「保存并开启同步」。"
+  audioRequired: "单词和原句音频为必填项。语音生成失败时，笔记会保留在本地队列中，可稍后重试。文本会发送到微软 Edge 语音服务以生成音频。"
+  endpoint: "本地 AnkiConnect 地址"
+  localOnly: "仅支持 localhost 或 127.0.0.1，无需 API 密钥或账号。"
+  deck: "默认牌组"
+  loadDecks: "加载牌组"
+  connected: "连接成功。可在牌组输入框中选择现有牌组。"
+  voice: "Edge TTS 声音"
+  enable: "开启 Anki 同步"
+  saveAndEnable: 保存并开启同步
+  saveSettings: "保存设置"
+  settingsSaved: "已保存 Anki 设置。"
+  queue: "已保存的单词"
+  retry: "立即重试"
+  queueDescription: "先保存到本地，Anki 桌面版可用时自动同步。重复单词会更新同一条笔记并保留原句。"
+  empty: "暂无已保存的单词。请在词典结果或单词建议中点击「保存到 Anki」。"

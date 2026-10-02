@@ -311,7 +311,7 @@ options:
         selectionTranslation: 透過劃詞工具列翻譯你選取的文字。
         inputTranslation: 在送出前翻譯你寫在輸入框裡的內容。
         videoSubtitles: 翻譯影片播放器中隨播放出現的字幕。
-        noteSuggestion: 選取文字翻譯後，推薦值得存入筆記庫的詞條。
+        noteSuggestion: "Suggest words to save to Anki after translating a selection."
     languageDetection:
       title: 語言偵測
       description: 影響自動翻譯語言偵測和朗讀語音選擇的準確性。
@@ -617,7 +617,7 @@ options:
         description: 在工具列中顯示朗讀按鈕，用於朗讀選取的文字
       noteSuggestion:
         title: 猜你想存
-        description: 使用 AI 供應商進行劃詞翻譯後，推薦可存入筆記庫的詞條
+        description: "After translating a selection, suggest words to save to Anki with their original sentences."
         action: 指令
         actionDescription: 用於產生「猜你想存」的指令
         provider: 提供者
@@ -852,7 +852,7 @@ options:
             5. 「句子翻譯」欄位只翻譯所提取的句子。
             6. 音標必須使用該詞條語言的標準標記（例如英文使用 IPA、中文使用拼音、日文使用羅馬字）。
             7. 詞性請使用英文（noun、verb、adjective 等）。
-            8. 難度必須是 CEFR 等級（A1、A2、B1、B2、C1 或 C2）。
+            8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. 如果某個欄位無法判斷，請回傳空字串，不要猜測。
             10. 除非必須使用來源形式才能保持清楚，所有文字欄位都請使用 {{targetLanguage}} 回答。
             11. 「句中詞形」欄位標出所選字詞在「句子」中的位置：它是一個字串，內容是精簡的 JSON 陣列，每項為 {"text": ...}，逐字引用「句子」中的原文，例如 [{"text":"blossoms"}]。如果「句子」把字詞拆成了幾個部分（例如德文 "anrufen" 在 "Er ruft seine Mutter an" 中），請依序每個部分一項：[{"text":"ruft"},{"text":"an"}]。請正確跳脫內部的引號。
@@ -903,8 +903,8 @@ options:
           fieldDefinitionDescription: 針對脈絡語意提供一則精簡定義。
           fieldSentenceTranslation: 句子翻譯
           fieldSentenceTranslationDescription: 只翻譯提取出的句子。
-          fieldDifficulty: 難度
-          fieldDifficultyDescription: 預估 CEFR 難度等級 A1、A2、B1、B2、C1 或 C2。
+          fieldDifficulty: "CET4 / CET6"
+          fieldDifficultyDescription: "Leave empty. CET4/CET6 membership is computed from local word lists, never estimated by AI."
         sentenceAnalysis:
           name: "長難句分析"
           description: "像老師一樣批註長難句：主幹、子句和難點一目了然"
@@ -1585,7 +1585,7 @@ action:
   addCustomAction: 新增自訂 AI 指令
 noteSuggestion:
   title: 猜你想存
-  description: 選擇要存入筆記庫的詞，將來隨時複習
+  description: "Choose words to save to Anki with their original sentences."
   save: 儲存
   saved: 已儲存
   staleSuggestion: 該建議已過期
@@ -1883,3 +1883,33 @@ languages:
   wls: 瓦利斯語
   rar: 庫克群島毛利語
   hif: 斐濟印地語
+
+anki:
+  title: "Anki"
+  description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
+  save: "Save to Anki"
+  saving: "Saving locally…"
+  synced: "Synced to Anki"
+  pending: "Queued for Anki"
+  error: "Needs attention"
+  syncing: "Syncing…"
+  setup: "Set up Anki"
+  savedLocally: "Saved on this device. Set up Anki to sync when Anki Desktop is open."
+  setupAnki: "Create cards with Anki Desktop on this computer. Review on mobile after syncing your collection and media."
+  setupConnect: "Install the AnkiConnect add-on (2055492159), restart Anki, and keep it open. If Anki asks, allow this extension to connect."
+  setupDeck: "Load your decks, choose an existing deck or enter a new name, then choose Save & enable sync."
+  audioRequired: "Word and sentence audio are required. If speech generation fails, the note stays queued and can be retried. Text is sent to Microsoft Edge speech services to generate audio."
+  endpoint: "Local AnkiConnect URL"
+  localOnly: "Only localhost or 127.0.0.1 is supported. No API key or account is needed."
+  deck: "Default deck"
+  loadDecks: "Load decks"
+  connected: "Connected. Your existing decks are available in the deck field."
+  voice: "Edge TTS voice"
+  enable: "Enable Anki sync"
+  saveAndEnable: Save & enable sync
+  saveSettings: "Save settings"
+  settingsSaved: "Anki settings saved."
+  queue: "Saved words"
+  retry: "Retry now"
+  queueDescription: "Saved locally first. Pending words sync when Anki Desktop is available. Repeated words update one note and keep their original sentences."
+  empty: "No saved words yet. Use Save to Anki from a dictionary result or word suggestion."

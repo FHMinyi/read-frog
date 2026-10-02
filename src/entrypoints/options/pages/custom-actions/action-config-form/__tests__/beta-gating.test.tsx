@@ -72,7 +72,7 @@ function cloneConfig(config: Config): Config {
   return JSON.parse(JSON.stringify(config)) as Config
 }
 
-describe("customActionConfigForm notebase availability", () => {
+describe("customActionConfigForm Anki availability", () => {
   it("renders built-in fields read-only and duplicates the complete action", async () => {
     const store = createStore()
     const config = cloneConfig(DEFAULT_CONFIG)
@@ -155,7 +155,7 @@ describe("customActionConfigForm notebase availability", () => {
     )
   })
 
-  it("shows the notebase connection field when beta experience is disabled", () => {
+  it("shows Anki setup without an account or beta experience requirement", () => {
     const store = createStore()
     const config = cloneConfig(DEFAULT_CONFIG)
 
@@ -192,9 +192,14 @@ describe("customActionConfigForm notebase availability", () => {
       </Provider>,
     )
 
+    fireEvent.click(screen.getByRole("tab", { name: i18n.t("anki.title") }))
+    expect(screen.getByRole("link", { name: i18n.t("anki.setup") })).toHaveAttribute(
+      "href",
+      "#/anki",
+    )
     expect(
-      screen.getByText(i18n.t("options.selectionToolbar.customActions.form.notebase.title")),
-    ).toBeInTheDocument()
+      screen.queryByText(i18n.t("options.selectionToolbar.customActions.form.notebase.title")),
+    ).not.toBeInTheDocument()
   })
 
   it("duplicates a custom action with its mutable state and connection", async () => {
