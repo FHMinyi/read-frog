@@ -1,3 +1,15 @@
+# Current Anki verification (2026-10-07)
+
+The current source adds conservative contiguous/separated phrase capture, validated UTF-16 highlights, same-phrase append, answer-side original context, and canonical-Term phonetic instructions. The regression suite exercises the real recommendation component, save hook, background handlers and sync engine with isolated IndexedDB and mocked Anki/TTS transport. It also reproduces a current content script talking to an old rejecting worker, distinguishing inline background errors from capture toasts.
+
+All default checks are offline. Live translation, AnkiConnect and speech tests are explicitly skipped; local lint includes type checking, and Chrome builds are unpacked development verification. Native identity-delivery tests use synthetic data and refuse mismatched identities, changed permissions or stale validators. No dependency binaries, private browser identities, real collections or queues are part of the source publication.
+
+Desktop operation was reported successful during manual acceptance. Current tooling does not provide independent observation of the loaded browser directory, worker or content-script build; that report is not an automated browser E2E result. Phone synchronization and offline playback remain unverified.
+
+Setup, supported phrase bounds and rollback: [Anki guide](ANKI.md) and [local handoff](LOCAL-HANDOFF.md). Main pushes/PRs run the offline workflow; upstream-only release jobs do not publish artifacts for this fork.
+
+---
+
 # Anki v1 verification
 
 Verified on 2026-10-02 against upstream/fork base `308a08d73091300c14fe2bf184d59895478174ef`.

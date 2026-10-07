@@ -1,12 +1,21 @@
-name: PR - Test & Build
+name: Test & Build
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
 
+permissions:
+  contents: read
+
 env:
   WXT_SKIP_ENV_VALIDATION: true
+  SKIP_FREE_API: true
+  RUN_LIVE_ANKI_CONNECT: false
+  RUN_LIVE_ANKI_TTS: false
 
 jobs:
   test-and-build:
@@ -52,3 +61,8 @@ jobs:
 
       - name: Run tests
         run: pnpm test --exclude="**/free-api.test.ts"
+
+      - name: Run native helper tests
+        run: |
+          pnpm test:dictionary-phonetic
+          pnpm test:local-handoff

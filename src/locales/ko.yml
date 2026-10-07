@@ -842,7 +842,7 @@ options:
             3. 뜻은 정확하고 학습자가 이해하기 쉽게 쓰세요.
             4. 예문에는 제공된 문단에서 선택한 표제어가 들어 있는 완전한 한 문장만 추출하세요. 앞뒤 문장은 포함하지 마세요.
             5. 예문 번역은 추출한 예문만 번역하세요.
-            6. 발음은 해당 언어의 표준 표기법을 사용하세요(예: 영어는 IPA, 중국어는 병음, 일본어는 로마자).
+            6. 발음은 선택한 활용형이 아니라 반환하는 정규화된 표제어(Term)의 발음이어야 합니다. 해당 언어의 표준 표기법을 사용하세요(예: 영어는 IPA, 중국어는 병음, 일본어는 로마자). 정규화된 표제어의 발음을 모르면 추측하지 말고 ""를 반환하세요. Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. 품사는 영어로 쓰세요(noun, verb, adjective 등).
             8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. 알 수 없는 항목은 추측하지 말고 빈 문자열을 반환하세요.
@@ -884,7 +884,7 @@ options:
           fieldTerm: "표제어"
           fieldTermDescription: "선택한 표제어의 기본형(원형)."
           fieldPhonetic: "발음"
-          fieldPhoneticDescription: "해당 언어의 표준 발음 표기(예: 영어는 IPA, 중국어는 병음, 일본어는 로마자)."
+          fieldPhoneticDescription: '발음은 선택한 활용형이 아니라 반환하는 정규화된 표제어(Term)의 발음이어야 합니다. 해당 언어의 표준 표기법을 사용하세요(예: 영어는 IPA, 중국어는 병음, 일본어는 로마자). 정규화된 표제어의 발음을 모르면 추측하지 말고 ""를 반환하세요.'
           fieldPartOfSpeech: "품사"
           fieldPartOfSpeechDescription: "문법 범주(예: noun, verb, adjective)."
           fieldSentence: "예문"

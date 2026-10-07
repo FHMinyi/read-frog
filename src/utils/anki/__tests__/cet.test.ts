@@ -27,4 +27,10 @@ describe("getCetMembership", () => {
     getCetMembership("abandon").pop()
     expect(getCetMembership("abandon")).toEqual(["CET4", "CET6"])
   })
+
+  it("does not inherit component-word memberships for a phrase", () => {
+    expect(getCetMembership("lock").length).toBeGreaterThan(0)
+    expect(getCetMembership("lock in")).toEqual([])
+    expect(getCetMembership("take care of")).toEqual([])
+  })
 })

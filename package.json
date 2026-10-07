@@ -20,6 +20,7 @@
     "postinstall": "WXT_SKIP_ENV_VALIDATION=true wxt prepare",
     "test": "vitest run",
     "test:dev-local": "node --test scripts/dev-local.node-test.mjs",
+    "test:dictionary-phonetic": "node --test scripts/dictionary-phonetic.node-test.mjs",
     "test:cov": "vitest run --coverage",
     "test:watch": "vitest",
     "type-check": "oxlint --type-aware --type-check",
@@ -29,7 +30,9 @@
     "zip:firefox": "wxt zip -b firefox --mv3",
     "zip:all": "pnpm zip && pnpm zip:edge && pnpm zip:firefox",
     "release": "changeset git-tag",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:local": "NODE_USE_SYSTEM_CA=1 WXT_SKIP_ENV_VALIDATION=true pnpm build && node scripts/prepare-local-handoff.mjs",
+    "test:local-handoff": "node --test scripts/prepare-local-handoff.node-test.mjs"
   },
   "dependencies": {
     "@ai-sdk/alibaba": "^2.0.56",

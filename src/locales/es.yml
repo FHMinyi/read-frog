@@ -845,7 +845,7 @@ options:
             3. Mantén Definición precisa y fácil para estudiantes.
             4. Para Oración, extrae únicamente la oración completa de los párrafos proporcionados que contenga el término seleccionado. No incluyas las oraciones anteriores ni posteriores.
             5. Traducción de la oración debe traducir únicamente la Oración extraída.
-            6. Fonética debe usar la notación estándar del idioma del término (p. ej., IPA para inglés, pinyin para mandarín, romaji para japonés).
+            6. Fonética debe transcribir el Term normalizado devuelto, no la forma flexionada seleccionada, usando la notación estándar de su idioma (p. ej., IPA para inglés, pinyin para mandarín, romaji para japonés). Si se desconoce la pronunciación del Term normalizado, devuelve "" sin adivinar. Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. Categoría gramatical en inglés (noun, verb, adjective, etc.).
             8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. Si un campo es desconocido, devuelve una cadena vacía en lugar de adivinar.
@@ -887,7 +887,7 @@ options:
           fieldTerm: Término
           fieldTermDescription: Lema base/canónico del término seleccionado.
           fieldPhonetic: Fonética
-          fieldPhoneticDescription: Transcripción fonética estándar para el idioma del término (p. ej., IPA para inglés, pinyin para mandarín, romaji para japonés).
+          fieldPhoneticDescription: 'Fonética debe transcribir el Term normalizado devuelto, no la forma flexionada seleccionada, usando la notación estándar de su idioma (p. ej., IPA para inglés, pinyin para mandarín, romaji para japonés). Si se desconoce la pronunciación del Term normalizado, devuelve "" sin adivinar.'
           fieldPartOfSpeech: Categoría gramatical
           fieldPartOfSpeechDescription: Categoría gramatical (p. ej., noun, verb, adjective).
           fieldSentence: Oración

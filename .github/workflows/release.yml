@@ -21,6 +21,8 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
+    # Fork pushes run checks without creating upstream-style release artifacts.
+    if: github.repository == 'mengxi-ream/read-frog'
     name: Release Extension
     runs-on: ubuntu-latest
     env:

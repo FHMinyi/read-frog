@@ -62,7 +62,8 @@ const notes = [
 function renderCard({
   deleted = false,
   changed = false,
-}: { deleted?: boolean; changed?: boolean } = {}) {
+  phrase = false,
+}: { deleted?: boolean; changed?: boolean; phrase?: boolean } = {}) {
   const actionSnapshot = createAction()
   const store = createStore()
   const config = structuredClone(DEFAULT_CONFIG)
@@ -72,10 +73,13 @@ function renderCard({
   store.set(configAtom, config)
   const suggestion: NoteSuggestionSessionResult = {
     sessionKey: "session-1",
-    validated: { notes, summaryFieldName: "Definition" },
+    validated: {
+      notes: phrase ? [{ Term: "lock in", Definition: "focus completely" }] : notes,
+      summaryFieldName: "Definition",
+    },
     actionSnapshot,
     captureContext: {
-      sentence: "The ephemeral moment was transient.",
+      sentence: phrase ? "All right, we're locking in." : "The ephemeral moment was transient.",
       sourceTitle: "Original page",
       sourceUrl: "https://example.com/original",
     },
@@ -117,6 +121,22 @@ describe("NoteSuggestionCard Anki save", () => {
       expect(screen.getByRole("button", { name: i18n.t("anki.pending") })).toBeDisabled(),
     )
   })
+  it("saves the recommended phrase as a whole from its original inflected sentence", async () => {
+    renderCard({ phrase: true })
+    expect(screen.getByRole("checkbox", { name: /lock in focus completely/ })).toBeChecked()
+    clickSave()
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith([
+        expect.objectContaining({
+          term: "lock in",
+          forms: ["locking in"],
+          sentence: "All right, we're locking in.",
+        }),
+      ]),
+    )
+    expect(mocks.toastAdd).not.toHaveBeenCalled()
+  })
+
   it("disables saving when nothing is selected", () => {
     renderCard()
     for (const checkbox of screen.getAllByRole("checkbox")) fireEvent.click(checkbox)

@@ -1,9 +1,17 @@
+/** UTF-16 offsets into the unchanged example sentence, end exclusive. */
+export interface AnkiTextSpan {
+  start: number
+  end: number
+}
+
 /** Persisted locally in the extension; no Read Frog account is involved. */
 export interface AnkiCapture {
   term: string
   sentence: string
   /** Exact surface form(s) actually present in the original sentence. */
   forms: string[]
+  /** Exact target-only spans for a verified separated phrase; absent for legacy captures. */
+  phraseSpans?: AnkiTextSpan[]
   definition: string
   translation: string
   phonetic: string

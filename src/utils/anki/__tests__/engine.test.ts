@@ -7,7 +7,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { AnkiTransportError } from "../client"
 import { createAnkiEngine } from "../engine"
 import { normalizeCapture } from "../normalization"
-import { ANKI_FIELDS, ANKI_MODEL_NAME } from "../render"
+import { findSeparatedPhraseMatches } from "../phrases"
+import { ANKI_FIELDS, ANKI_MODEL_NAME, ANKI_TEMPLATE } from "../render"
 import { AnkiDatabase, createAnkiStore } from "../store"
 import { DEFAULT_ANKI_SETTINGS } from "../types"
 
@@ -31,6 +32,20 @@ function capture(sentence = "They work outside.", term = "work"): AnkiCapture {
   }
 }
 
+function phraseCapture(
+  sentence = "All right, we're locking in.",
+  form = "locking in",
+): AnkiCapture {
+  return {
+    ...capture(sentence, "lock in"),
+    forms: [form],
+    definition: "focus completely",
+    translation: "我们要全力以赴。",
+    phonetic: "/lɒk ɪn/",
+    partOfSpeech: "phrasal verb",
+  }
+}
+
 function database(name = `anki-engine-test-${++databaseNumber}`) {
   const db = new AnkiDatabase(name)
   databases.push(db)
@@ -48,6 +63,7 @@ function mockAnki() {
     { noteId: number; modelName: string; fields: Record<string, { value: string; order: number }> }
   >()
   const media = new Map<string, string>()
+  let backTemplate = ANKI_TEMPLATE.Back
   let id = 10
   let loseAddResponse = false
   let mediaFailure = false
@@ -63,7 +79,10 @@ function mockAnki() {
         case "modelFieldNames":
           return [...ANKI_FIELDS]
         case "modelTemplates":
-          return { Context: { Front: "{{Front}}", Back: "{{Back}}" } }
+          return { Context: { Front: "{{Front}}", Back: backTemplate } }
+        case "updateModelTemplates":
+          backTemplate = params.model.templates.Context.Back
+          return null
         case "createDeck":
           return 1
         case "findNotes":
@@ -129,6 +148,9 @@ function mockAnki() {
     notes,
     media,
     schedule,
+    setBackTemplate: (back: string) => {
+      backTemplate = back
+    },
     loseNextAddResponse: () => {
       loseAddResponse = true
     },
@@ -180,6 +202,32 @@ afterEach(async () => {
 })
 
 describe("persistent Anki sync engine", () => {
+  it("upgrades only the legacy shared answer template once", async () => {
+    const { engine, anki } = await setup()
+    anki.setBackTemplate("{{Back}}")
+    await engine.enqueue([capture()])
+    await engine.processQueue()
+    await engine.enqueue([capture("We work together.")])
+    await engine.processQueue()
+    expect(actionCount(anki, "updateModelTemplates")).toBe(1)
+    expect(anki.invoke).toHaveBeenCalledWith("updateModelTemplates", {
+      model: { name: ANKI_MODEL_NAME, templates: { Context: { Back: ANKI_TEMPLATE.Back } } },
+    })
+    expect(actionCount(anki, "addNote")).toBe(1)
+    expect(anki.schedule).toEqual({ due: 123, interval: 17, reps: 9 })
+  })
+
+  it("leaves a customized answer template and its notes untouched", async () => {
+    const { engine, anki } = await setup()
+    anki.setBackTemplate("{{Back}}<p>My custom answer</p>")
+    await engine.enqueue([capture()])
+    await engine.processQueue()
+    expect(actionCount(anki, "updateModelTemplates")).toBe(0)
+    expect(actionCount(anki, "addNote")).toBe(0)
+    expect(actionCount(anki, "updateNoteFields")).toBe(0)
+    expect((await engine.getSnapshot()).entries[0]!.error).toContain("incompatibly")
+  })
+
   it("deduplicates captures and concurrent drains, uploads MP3 before adding one card", async () => {
     const { engine, anki, synthesize } = await setup()
     await Promise.all([engine.enqueue([capture()]), engine.enqueue([capture()])])
@@ -213,6 +261,123 @@ describe("persistent Anki sync engine", () => {
     expect(actionCount(anki, "updateNoteFields")).toBe(1)
     expect(actionCount(anki, "createDeck")).toBe(1)
     expect(anki.schedule).toEqual({ due: 123, interval: 17, reps: 9 })
+  })
+
+  it("saves and speaks the whole phrase, appends inflections to one card and preserves its progress", async () => {
+    const { engine, anki, synthesize } = await setup()
+    await engine.enqueue([phraseCapture(), phraseCapture()])
+    await engine.processQueue()
+    const original = (await engine.getSnapshot()).entries[0]!
+    expect(original).toMatchObject({
+      lemma: "lock in",
+      identity: "phrase:lock in",
+      status: "synced",
+    })
+    expect(original.examples).toHaveLength(1)
+    expect(synthesize).toHaveBeenCalledWith("lock in", "en-US-AriaNeural")
+    expect(synthesize).not.toHaveBeenCalledWith("lock", "en-US-AriaNeural")
+    await engine.updateSettings({ deckName: "Different default" })
+    await engine.enqueue([phraseCapture("We locked in yesterday.", "locked in")])
+    await engine.processQueue()
+    const entry = (await engine.getSnapshot()).entries[0]!
+    expect(entry.key).toBe(original.key)
+    expect(entry.noteId).toBe(original.noteId)
+    expect(entry.deckName).toBe(original.deckName)
+    expect(entry.examples).toHaveLength(2)
+    expect(entry.status).toBe("synced")
+    expect(actionCount(anki, "addNote")).toBe(1)
+    expect(actionCount(anki, "updateNoteFields")).toBe(1)
+    expect(actionCount(anki, "createDeck")).toBe(1)
+    expect(anki.schedule).toEqual({ due: 123, interval: 17, reps: 9 })
+    expect(synthesize.mock.calls.map(([text]) => text)).toEqual([
+      "lock in",
+      "All right, we're locking in.",
+      "We locked in yesterday.",
+    ])
+    expect(anki.media.size).toBe(3)
+    const note = [...anki.notes.values()][0]!
+    expect(note.fields.Front!.value).toContain("<mark>locking in</mark>")
+    expect(note.fields.Front!.value).toContain("<mark>locked in</mark>")
+    expect(note.fields.Back!.value).toContain("<mark>locking in</mark>")
+    expect(note.fields.Back!.value).toContain("<mark>locked in</mark>")
+    expect(note.fields.Back!.value).not.toContain("rf-badge")
+    await engine.enqueue([capture("They lock the door.", "lock")])
+    await engine.processQueue()
+    expect(anki.notes.size).toBe(2)
+    const entries = (await engine.getSnapshot()).entries
+    expect(entries.find((candidate) => candidate.identity === "word:lock")!.key).not.toBe(entry.key)
+  })
+
+  it("merges phrase examples from a second installation instead of replacing an existing note", async () => {
+    const anki = mockAnki()
+    const first = await setup(anki)
+    await first.engine.enqueue([phraseCapture()])
+    await first.engine.processQueue()
+    const original = (await first.engine.getSnapshot()).entries[0]!
+    const second = await setup(anki)
+    await second.engine.enqueue([phraseCapture("We locked in yesterday.", "locked in")])
+    await second.engine.processQueue()
+    const entry = (await second.engine.getSnapshot()).entries[0]!
+    expect(entry.noteId).toBe(original.noteId)
+    expect(entry.examples).toHaveLength(2)
+    expect(anki.notes.size).toBe(1)
+    expect(actionCount(anki, "updateNoteFields")).toBe(1)
+    expect(anki.schedule).toEqual({ due: 123, interval: 17, reps: 9 })
+  })
+
+  it("round-trips separated target spans when a second installation appends a continuous example", async () => {
+    const sentence = "She walked me through the guide."
+    const match = findSeparatedPhraseMatches(sentence, "walk through")[0]!
+    const input = {
+      ...capture(sentence, "walk through"),
+      forms: match.forms,
+      phraseSpans: match.spans,
+    }
+    const anki = mockAnki()
+    const first = await setup(anki)
+    await first.engine.enqueue([input])
+    await first.engine.processQueue()
+    const original = (await first.engine.getSnapshot()).entries[0]!
+    const second = await setup(anki)
+    await second.engine.enqueue([
+      {
+        ...capture("We walked through the plan together.", "walk through"),
+        forms: ["walked through"],
+      },
+    ])
+    await second.engine.processQueue()
+    const entry = (await second.engine.getSnapshot()).entries[0]!
+    expect(entry.noteId).toBe(original.noteId)
+    expect(entry.identity).toBe("phrase:walk through")
+    expect(entry.examples).toHaveLength(2)
+    expect(entry.examples.find((example) => example.sentence === sentence)!.phraseSpans).toEqual(
+      match.spans,
+    )
+    const note = [...anki.notes.values()][0]!
+    expect(note.fields.Front!.value).toContain("<mark>walked</mark> me <mark>through</mark>")
+    expect(note.fields.Back!.value).toContain("<mark>walked</mark> me <mark>through</mark>")
+    expect(actionCount(anki, "addNote")).toBe(1)
+    expect(actionCount(anki, "updateNoteFields")).toBe(1)
+    expect(anki.schedule).toEqual({ due: 123, interval: 17, reps: 9 })
+  })
+
+  it("retains a phrase offline and retries after restarting without duplicate cards", async () => {
+    const { engine, anki, dependencies } = await setup()
+    const original = anki.client.invoke
+    anki.client.invoke = async () => {
+      throw new AnkiTransportError("offline")
+    }
+    await engine.enqueue([phraseCapture()])
+    await engine.processQueue()
+    expect((await engine.getSnapshot()).entries[0]!.status).toBe("error")
+    expect(anki.notes.size).toBe(0)
+    anki.client.invoke = original
+    const restarted = createAnkiEngine(dependencies)
+    await restarted.retry()
+    await restarted.enqueue([phraseCapture()])
+    await restarted.processQueue()
+    expect((await restarted.getSnapshot()).entries[0]!.status).toBe("synced")
+    expect(actionCount(anki, "addNote")).toBe(1)
   })
 
   it("merges additional surface forms without duplicating an example", async () => {

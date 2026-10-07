@@ -850,7 +850,7 @@ options:
             3. 保持释义精确且适合学习者。
             4. “句子”字段只提取所提供段落中包含选中词语的完整句子，不要包含前后句。
             5. “句子翻译”字段只翻译所提取的句子。
-            6. 音标必须使用该语言的标准标注（如英语用 IPA，中文用拼音，日语用罗马字）。
+            6. 音标必须对应返回的归一化词条（Term），不要对应选中的屈折词形；使用该语言的标准标注（如英语用 IPA，中文用拼音，日语用罗马字）。如果归一化词条的读音未知，返回 ""，不要猜测。 Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. 词性使用英文（noun, verb, adjective 等）。
             8. 词表标签字段留空。Read Frog 会在本地查询 CET4/CET6 词表，不要估计语言等级。
             9. 如果某个字段未知，返回空字符串而非猜测。
@@ -892,7 +892,7 @@ options:
           fieldTerm: 词条
           fieldTermDescription: 选中词条的基本/标准词元形式。
           fieldPhonetic: 音标
-          fieldPhoneticDescription: 该语言的标准音标（如英语用 IPA，中文用拼音，日语用罗马字）。
+          fieldPhoneticDescription: '音标必须对应返回的归一化词条（Term），不要对应选中的屈折词形；使用该语言的标准标注（如英语用 IPA，中文用拼音，日语用罗马字）。如果归一化词条的读音未知，返回 ""，不要猜测。'
           fieldPartOfSpeech: 词性
           fieldPartOfSpeechDescription: 语法类别（如 noun、verb、adjective）。
           fieldSentence: 句子

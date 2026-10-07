@@ -850,7 +850,7 @@ options:
             3. Keep Definition precise and learner-friendly.
             4. For Sentence, extract only the complete sentence from the provided paragraphs that contains the selected term. Do not include surrounding sentences.
             5. Sentence Translation must translate only the extracted Sentence.
-            6. Phonetic must use the standard notation for the term's language (e.g., IPA for English, pinyin for Mandarin, romaji for Japanese).
+            6. Phonetic must transcribe the returned normalized Term, not the selected inflected form, using the standard notation for its language (e.g., IPA for English, pinyin for Mandarin, romaji for Japanese). If the normalized Term's pronunciation is unknown, return "" instead of guessing. Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. Part of Speech in English (noun, verb, adjective, etc.).
             8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. If a field is unknown, return an empty string instead of guessing.
@@ -892,7 +892,7 @@ options:
           fieldTerm: Term
           fieldTermDescription: Base/canonical lemma of the selected term.
           fieldPhonetic: Phonetic
-          fieldPhoneticDescription: Standard phonetic transcription for the term's language (e.g., IPA for English, pinyin for Mandarin, romaji for Japanese).
+          fieldPhoneticDescription: 'Phonetic must transcribe the returned normalized Term, not the selected inflected form, using the standard notation for its language (e.g., IPA for English, pinyin for Mandarin, romaji for Japanese). If the normalized Term''s pronunciation is unknown, return "" instead of guessing.'
           fieldPartOfSpeech: Part of Speech
           fieldPartOfSpeechDescription: Grammatical category (e.g., noun, verb, adjective).
           fieldSentence: Sentence

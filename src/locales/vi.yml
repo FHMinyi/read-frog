@@ -842,7 +842,7 @@ options:
             3. Định nghĩa phải chính xác và dễ hiểu với người học.
             4. Với Câu, chỉ trích ra câu hoàn chỉnh trong các đoạn văn đã cho có chứa từ được chọn. Không kèm các câu trước và sau.
             5. Bản dịch câu chỉ dịch Câu đã trích ra.
-            6. Phiên âm phải dùng cách ghi chuẩn cho ngôn ngữ của từ (ví dụ IPA cho tiếng Anh, pinyin cho tiếng Trung, romaji cho tiếng Nhật).
+            6. Phiên âm phải tương ứng với mục từ Term đã chuẩn hóa được trả về, không phải dạng biến đổi được chọn; dùng cách ghi chuẩn của ngôn ngữ đó (ví dụ IPA cho tiếng Anh, pinyin cho tiếng Trung, romaji cho tiếng Nhật). Nếu không biết cách phát âm của Term đã chuẩn hóa, trả về "" thay vì đoán. Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. Từ loại ghi bằng tiếng Anh (noun, verb, adjective, v.v.).
             8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. Nếu không biết một trường, hãy trả về chuỗi rỗng thay vì đoán.
@@ -884,7 +884,7 @@ options:
           fieldTerm: "Mục từ"
           fieldTermDescription: "Dạng cơ bản/dạng gốc của từ được chọn."
           fieldPhonetic: "Phiên âm"
-          fieldPhoneticDescription: "Phiên âm chuẩn cho ngôn ngữ của từ (ví dụ IPA cho tiếng Anh, pinyin cho tiếng Trung, romaji cho tiếng Nhật)."
+          fieldPhoneticDescription: 'Phiên âm phải tương ứng với mục từ Term đã chuẩn hóa được trả về, không phải dạng biến đổi được chọn; dùng cách ghi chuẩn của ngôn ngữ đó (ví dụ IPA cho tiếng Anh, pinyin cho tiếng Trung, romaji cho tiếng Nhật). Nếu không biết cách phát âm của Term đã chuẩn hóa, trả về "" thay vì đoán.'
           fieldPartOfSpeech: "Từ loại"
           fieldPartOfSpeechDescription: "Loại ngữ pháp (ví dụ noun, verb, adjective)."
           fieldSentence: "Câu"

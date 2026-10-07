@@ -845,7 +845,7 @@ options:
             3. Tərifi dəqiq və öyrənən üçün anlaşılan yazın.
             4. Cümlə üçün verilmiş abzaslardan yalnız seçilmiş sözün olduğu tam cümləni çıxarın. Ətrafdakı cümlələri daxil etməyin.
             5. Yalnız çıxarılmış cümləni tərcümə edin.
-            6. Tələffüz üçün sözün dilindəki standart yazılışdan istifadə edin (məsələn, ingilis dili üçün IPA, mandarin dili üçün pinyin, yapon dili üçün romaji).
+            6. Tələffüz seçilmiş şəkilçili formaya deyil, qaytarılan normallaşdırılmış Term sözünə uyğun olmalıdır; dilin standart yazılışından istifadə edin (məsələn, ingilis dili üçün IPA, mandarin dili üçün pinyin, yapon dili üçün romaji). Normallaşdırılmış Term sözünün tələffüzü məlum deyilsə, təxmin etmək əvəzinə "" qaytarın. Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. Nitq hissəsini ingilis dilində yazın (isim, feil, sifət və s.).
             8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. Sahənin dəyəri məlum deyilsə, təxmin etmək əvəzinə boş sətir qaytarın.
@@ -887,7 +887,7 @@ options:
           fieldTerm: Söz
           fieldTermDescription: Seçilmiş sözün əsas lüğət forması.
           fieldPhonetic: Tələffüz
-          fieldPhoneticDescription: Sözün dilinə uyğun standart fonetik transkripsiya (məsələn, ingilis dili üçün IPA, mandarin dili üçün pinyin, yapon dili üçün romaji).
+          fieldPhoneticDescription: 'Tələffüz seçilmiş şəkilçili formaya deyil, qaytarılan normallaşdırılmış Term sözünə uyğun olmalıdır; dilin standart yazılışından istifadə edin (məsələn, ingilis dili üçün IPA, mandarin dili üçün pinyin, yapon dili üçün romaji). Normallaşdırılmış Term sözünün tələffüzü məlum deyilsə, təxmin etmək əvəzinə "" qaytarın.'
           fieldPartOfSpeech: Nitq hissəsi
           fieldPartOfSpeechDescription: Qrammatik kateqoriya (məsələn, isim, feil, sifət).
           fieldSentence: Cümlə

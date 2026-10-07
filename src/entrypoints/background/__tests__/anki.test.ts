@@ -87,6 +87,24 @@ describe("Anki background lifecycle", () => {
       mocks.processQueue.mock.invocationCallOrder[0]!,
     )
   })
+  it("persists whole-phrase captures but refuses detached phrase parts", async () => {
+    const phrase = {
+      ...capture,
+      term: "lock in",
+      sentence: "We are locking in.",
+      forms: ["locking in"],
+    }
+    await mocks.handlers.get("ankiEnqueue")!({ data: { captures: [phrase] } })
+    expect(mocks.enqueue).toHaveBeenCalledWith([phrase])
+    mocks.enqueue.mockClear()
+    await expect(
+      mocks.handlers.get("ankiEnqueue")!({
+        data: { captures: [{ ...phrase, forms: ["locking", "in"] }] },
+      }),
+    ).rejects.toThrow("verified original form")
+    expect(mocks.enqueue).not.toHaveBeenCalled()
+  })
+
   it("rejects malformed or oversized messages without persisting", async () => {
     await expect(mocks.handlers.get("ankiEnqueue")!({ data: { captures: [] } })).rejects.toThrow(
       "Save between",

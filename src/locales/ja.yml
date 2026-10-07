@@ -842,7 +842,7 @@ options:
             3. 意味は正確で、学習者にわかりやすく書いてください。
             4. 例文には、与えられた段落のうち選択された語句を含む完全な一文だけを抜き出してください。前後の文は含めないでください。
             5. 例文の翻訳では、抜き出した例文だけを翻訳してください。
-            6. 発音はその語の言語の標準的な表記を使ってください（例：英語は IPA、中国語はピンイン、日本語はローマ字）。
+            6. 発音は選択された活用形ではなく、返す正規化済みの見出し語（Term）に対応する標準表記を使ってください（例：英語は IPA、中国語はピンイン、日本語はローマ字）。正規化済みの見出し語の発音が不明なら、推測せず "" を返してください。 Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. 品詞は英語で書いてください（noun、verb、adjective など）。
             8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. わからない項目は、推測せずに空文字列を返してください。
@@ -884,7 +884,7 @@ options:
           fieldTerm: "見出し語"
           fieldTermDescription: "選択された語句の基本形（原形）。"
           fieldPhonetic: "発音"
-          fieldPhoneticDescription: "その語の言語の標準的な発音表記（例：英語は IPA、中国語はピンイン、日本語はローマ字）。"
+          fieldPhoneticDescription: '発音は選択された活用形ではなく、返す正規化済みの見出し語（Term）に対応する標準表記を使ってください（例：英語は IPA、中国語はピンイン、日本語はローマ字）。正規化済みの見出し語の発音が不明なら、推測せず "" を返してください。'
           fieldPartOfSpeech: "品詞"
           fieldPartOfSpeechDescription: "文法上の品詞（例：noun、verb、adjective）。"
           fieldSentence: "例文"

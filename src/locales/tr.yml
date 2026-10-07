@@ -842,7 +842,7 @@ options:
             3. Tanımı kesin ve öğrenenlerin anlayacağı şekilde yazın.
             4. Cümle için verilen paragraflardan yalnızca seçilen sözcüğü içeren tam cümleyi çıkarın. Önceki ve sonraki cümleleri eklemeyin.
             5. Cümle çevirisi yalnızca çıkarılan Cümleyi çevirmelidir.
-            6. Okunuş, sözcüğün dilinin standart gösterimini kullanmalıdır (örneğin İngilizce için IPA, Mandarin Çincesi için pinyin, Japonca için romaji).
+            6. Okunuş, seçilen çekimli biçimin değil, döndürülen normalleştirilmiş Term sözcüğünün okunuşu olmalıdır; dilin standart gösterimini kullanın (örneğin İngilizce için IPA, Mandarin Çincesi için pinyin, Japonca için romaji). Normalleştirilmiş Term sözcüğünün okunuşu bilinmiyorsa tahmin etmek yerine "" döndürün. Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. Sözcük türünü İngilizce yazın (noun, verb, adjective vb.).
             8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. Bir alan bilinmiyorsa tahmin etmek yerine boş bir dize döndürün.
@@ -884,7 +884,7 @@ options:
           fieldTerm: "Sözcük"
           fieldTermDescription: "Seçilen sözcüğün temel/sözlük biçimi."
           fieldPhonetic: "Okunuş"
-          fieldPhoneticDescription: "Sözcüğün dili için standart okunuş gösterimi (örneğin İngilizce için IPA, Mandarin Çincesi için pinyin, Japonca için romaji)."
+          fieldPhoneticDescription: 'Okunuş, seçilen çekimli biçimin değil, döndürülen normalleştirilmiş Term sözcüğünün okunuşu olmalıdır; dilin standart gösterimini kullanın (örneğin İngilizce için IPA, Mandarin Çincesi için pinyin, Japonca için romaji). Normalleştirilmiş Term sözcüğünün okunuşu bilinmiyorsa tahmin etmek yerine "" döndürün.'
           fieldPartOfSpeech: "Sözcük türü"
           fieldPartOfSpeechDescription: "Dilbilgisel kategori (örneğin noun, verb, adjective)."
           fieldSentence: "Cümle"

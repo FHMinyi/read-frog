@@ -5,7 +5,14 @@ import type { AnkiCapture, AnkiEntry, AnkiExample, AnkiSettings, AnkiSnapshot } 
 import { getAnkiAudio, synthesizeAnkiAudio } from "./audio"
 import { AnkiTransportError, createAnkiClient, validateAnkiEndpoint } from "./client"
 import { normalizeCapture } from "./normalization"
-import { ANKI_CSS, ANKI_FIELDS, ANKI_MODEL_NAME, ANKI_TEMPLATE, renderAnkiFields } from "./render"
+import {
+  ANKI_CSS,
+  ANKI_FIELDS,
+  ANKI_LEGACY_BACK,
+  ANKI_MODEL_NAME,
+  ANKI_TEMPLATE,
+  renderAnkiFields,
+} from "./render"
 import { createAnkiStore } from "./store"
 
 interface NoteInfo {
@@ -147,9 +154,18 @@ async function ensureModel(client: AnkiClient): Promise<void> {
     JSON.stringify(fields) !== JSON.stringify(ANKI_FIELDS) ||
     Object.keys(templates).length !== 1 ||
     templates[ANKI_TEMPLATE.Name]?.Front !== ANKI_TEMPLATE.Front ||
-    templates[ANKI_TEMPLATE.Name]?.Back !== ANKI_TEMPLATE.Back
+    (templates[ANKI_TEMPLATE.Name]?.Back !== ANKI_TEMPLATE.Back &&
+      templates[ANKI_TEMPLATE.Name]?.Back !== ANKI_LEGACY_BACK)
   ) {
     throw new Error("The Read Frog Anki note type was modified incompatibly; no notes were changed")
+  }
+  if (templates[ANKI_TEMPLATE.Name]?.Back === ANKI_LEGACY_BACK) {
+    await client.invoke("updateModelTemplates", {
+      model: {
+        name: ANKI_MODEL_NAME,
+        templates: { [ANKI_TEMPLATE.Name]: { Back: ANKI_TEMPLATE.Back } },
+      },
+    })
   }
 }
 

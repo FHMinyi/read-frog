@@ -1,9 +1,35 @@
-import type { AnkiEntry } from "./types"
+import type { AnkiEntry, AnkiTextSpan } from "./types"
 import { getCetMembership } from "./cet"
+import { targetPattern } from "./phrases"
 
 export const ANKI_MODEL_NAME = "Read Frog Context v1"
 export const ANKI_FIELDS = ["RFKey", "Front", "Back", "Data"] as const
-export const ANKI_TEMPLATE = { Name: "Context", Front: "{{Front}}", Back: "{{Back}}" }
+export const ANKI_LEGACY_BACK = "{{Back}}"
+// Older notes already have the highlighted originals in Front. Reuse them on the
+// answer without rewriting note fields or changing card scheduling.
+export const ANKI_TEMPLATE = {
+  Name: "Context",
+  Front: "{{Front}}",
+  Back: `<div id="rf-answer-context">
+{{Back}}
+<template id="rf-answer-originals">{{Front}}</template>
+</div>
+<script>
+(function () {
+  var answer = document.getElementById("rf-answer-context");
+  var originals = document.getElementById("rf-answer-originals");
+  if (!answer || !originals) return;
+  var sentences = originals.content.querySelectorAll(".rf-sentence");
+  var examples = answer.querySelectorAll(".rf-example");
+  for (var i = 0; i < examples.length; i++) {
+    if (sentences[i] && !examples[i].querySelector(".rf-sentence")) {
+      examples[i].insertBefore(sentences[i].cloneNode(true), examples[i].querySelector(".rf-definition"));
+    }
+  }
+  originals.remove();
+})();
+</script>`,
+}
 export const ANKI_CSS = `
 .card { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 20px; line-height: 1.65; text-align: left; color: #21312b; background: #f6f8f5; }
 .rf-card { max-width: 760px; margin: 0 auto; padding: 24px; }
@@ -36,10 +62,33 @@ export function escapeAnkiHtml(value: string): string {
   )
 }
 
-export function highlightSentence(sentence: string, forms: string[]): string {
+export function highlightSentence(
+  sentence: string,
+  forms: string[],
+  spans?: AnkiTextSpan[],
+): string {
+  if (spans) {
+    let output = ""
+    let offset = 0
+    for (const span of spans) {
+      if (
+        !Number.isInteger(span.start) ||
+        !Number.isInteger(span.end) ||
+        span.start < offset ||
+        span.end <= span.start ||
+        span.end > sentence.length
+      ) {
+        throw new Error("Invalid Anki phrase highlight spans")
+      }
+      output += escapeAnkiHtml(sentence.slice(offset, span.start))
+      output += `<mark>${escapeAnkiHtml(sentence.slice(span.start, span.end))}</mark>`
+      offset = span.end
+    }
+    return output + escapeAnkiHtml(sentence.slice(offset))
+  }
   const alternatives = [...new Set(forms.filter((form) => form.trim()))]
     .sort((left, right) => right.length - left.length)
-    .map((form) => form.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .map(targetPattern)
   if (!alternatives.length) return escapeAnkiHtml(sentence)
   const pattern = new RegExp(
     `(?<![\\p{L}\\p{N}_])(?:${alternatives.join("|")})(?![\\p{L}\\p{N}_])`,
@@ -100,13 +149,14 @@ export function renderAnkiFields(entry: AnkiEntry): Record<string, string> {
   const front = entry.examples
     .map(
       (example) =>
-        `<p class="rf-sentence">${highlightSentence(example.sentence, example.forms)}</p>`,
+        `<p class="rf-sentence">${highlightSentence(example.sentence, example.forms, example.phraseSpans)}</p>`,
     )
     .join("")
   const back = entry.examples
     .map(
       (example, index) => `<section class="rf-example">
 <div class="rf-meta">${index + 1}. ${sound(example.sentenceAudio)}</div>
+<p class="rf-sentence">${highlightSentence(example.sentence, example.forms, example.phraseSpans)}</p>
 <p class="rf-definition">${escapeAnkiHtml(example.definition)}</p>
 <p class="rf-translation">${escapeAnkiHtml(example.translation)}</p>
 <div class="rf-source">${source(example.sourceTitle, example.sourceUrl)}</div>

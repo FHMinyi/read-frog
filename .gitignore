@@ -47,3 +47,6 @@ scripts/output/
 
 reference/
 .gstack/
+
+# Private unpacked extension identity (never commit browser identity/configuration)
+.local-handoff.json

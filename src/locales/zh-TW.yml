@@ -850,7 +850,7 @@ options:
             3. 定義要精確且適合學習者理解。
             4. 「句子」欄位只提取所提供段落中包含所選字詞的完整句子，不要包含前後句。
             5. 「句子翻譯」欄位只翻譯所提取的句子。
-            6. 音標必須使用該詞條語言的標準標記（例如英文使用 IPA、中文使用拼音、日文使用羅馬字）。
+            6. 音標必須對應回傳的正規化詞條（Term），不要對應選取的屈折詞形；使用該語言的標準標記（例如英文使用 IPA、中文使用拼音、日文使用羅馬字）。若正規化詞條的讀音未知，回傳 ""，不要猜測。 Selection="boxes" → Term="box", Phonetic="/bɒks/".
             7. 詞性請使用英文（noun、verb、adjective 等）。
             8. Leave the vocabulary-list field empty. Read Frog computes CET4/CET6 membership locally; never estimate a proficiency level.
             9. 如果某個欄位無法判斷，請回傳空字串，不要猜測。
@@ -892,7 +892,7 @@ options:
           fieldTerm: 詞條
           fieldTermDescription: 所選詞條的基本／標準詞元形式。
           fieldPhonetic: 音標
-          fieldPhoneticDescription: 詞條語言的標準音標標記（例如英文使用 IPA、中文使用拼音、日文使用羅馬字）。
+          fieldPhoneticDescription: '音標必須對應回傳的正規化詞條（Term），不要對應選取的屈折詞形；使用該語言的標準標記（例如英文使用 IPA、中文使用拼音、日文使用羅馬字）。若正規化詞條的讀音未知，回傳 ""，不要猜測。'
           fieldPartOfSpeech: 詞性
           fieldPartOfSpeechDescription: 文法類別（例如 noun、verb、adjective）。
           fieldSentence: 句子

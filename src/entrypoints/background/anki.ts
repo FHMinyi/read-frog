@@ -18,7 +18,7 @@ export function setupAnkiMessageHandlers() {
   onMessage("ankiGetSnapshot", () => ankiEngine.getSnapshot())
   onMessage("ankiEnqueue", async ({ data }) => {
     if (!Array.isArray(data?.captures) || !data.captures.length || data.captures.length > 20) {
-      throw new Error("Save between 1 and 20 words at a time.")
+      throw new Error("Save between 1 and 20 words or phrases at a time.")
     }
     const snapshot = await ankiEngine.enqueue(data.captures.map(validateAnkiCapture))
     drain()

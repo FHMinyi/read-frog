@@ -9,19 +9,25 @@ Use a separate browser profile for the first end-to-end test. Do not run the off
 1. Install desktop [Anki](https://apps.ankiweb.net/) and [AnkiConnect](https://ankiweb.net/shared/info/2055492159) from their official sources. Keep Anki running while exporting. Use a separate test profile first, with no personal collection.
 2. In the extension, open **Options → Anki**. The default local endpoint is `http://127.0.0.1:8765`. Only loopback addresses are accepted. V1 does not support remote endpoints or API-key authentication.
 3. Load the deck list, select your target deck (or type a new deck name), and choose Save & enable sync. The default English voice is `en-US-AriaNeural`. These settings persist locally.
-4. Run the built-in Dictionary on a word inside its original sentence, then choose **Save to Anki**. A save is acknowledged after local persistence. The options page shows pending, syncing, error, or synced status; error messages and Retry are available there.
+4. Run the built-in Dictionary on a word or phrase inside its original sentence, then choose **Save to Anki**. A save is acknowledged after local persistence. The options page shows pending, syncing, error, or synced status; error messages and Retry are available there.
 
 The extension never enables AnkiConnect permissions automatically. If AnkiConnect refuses access, review its configuration and allow only your extension's exact origin if needed; do not expose its port publicly or use a wildcard origin. If your AnkiConnect requires an API key, this version deliberately does not ask you to paste that credential into extension settings.
 
 ## Card behavior
 
-- One note with one card per confidently resolved word identity; new sentences append to that note
+- One note with one card per confidently resolved word or phrase identity; new sentences append to that note
 - Front: collected original sentences only, with their actual target forms highlighted
-- Back: contextual definitions/translations, lemma, available phonetics/POS, CET4/CET6 reference labels, sources, word audio and each sentence's audio
+- Back: each highlighted original sentence with its contextual definition/translation, lemma, available phonetics/POS, CET4/CET6 reference labels, sources, word audio and sentence audio
 - The AI proposes a lemma in context; pinned lexical inflection data checks the relationship. Derivations such as `decide` and `decision` stay separate. Ambiguous or unverified identities stay sentence-scoped rather than being merged incorrectly
-- Repeated word + original sentence does not append another example. Additional highlights can be added to the same example
+- Repeated word/phrase + original sentence does not append another example. Additional highlights can be added to the same example
 - Updates change note fields, not card scheduling, review history, or deck placement. Changing the default deck applies to new notes; existing notes remain in their existing decks
 - A dedicated `Read Frog Context v1` note type keeps a stable key and portable data. Do not rename/delete its fields. The extension rejects conflicting/duplicate note identities rather than guessing
+
+Contiguous phrases stay whole: `locking in` can resolve to `lock in`, and phrase keys remain separate from component-word keys. Only verified head inflections with unchanged tails merge. The separated forms currently supported are `walk through` and `lock in` with exactly one object/reflexive pronoun, such as `walked me through` or `lock it in`. Only the two target spans are highlighted; the inserted pronoun and complete source sentence stay intact. Unsupported or longer gaps, cross-sentence/line matches, and ambiguous candidates are rejected. Phrase CET labels require exact membership of the whole phrase.
+
+The built-in Dictionary requests phonetics for the returned canonical Term, rather than the selected inflected form; unknown pronunciation stays empty. Edited custom Dictionary prompts remain under user control.
+
+Existing notes with the original default `{{Back}}` answer template are upgraded to reuse their highlighted Front sentences on the answer. Custom fields/templates are rejected rather than overwritten. This update does not rewrite existing notes or reset scheduling.
 
 ## Queue, audio, and privacy
 
@@ -39,7 +45,7 @@ For phone review, use Anki's normal collection **and media** sync, then wait unt
 
 CET labels mean exact membership in a pinned, community-maintained ECDICT reference list. They are not official exam coverage, a ranking, or an AI estimate. Both labels can occur; no match stays empty and does not mean “advanced.” See [data provenance](../src/utils/anki/data/README.md) and the bundled `public/licenses/anki-ecdict.txt` for the MIT license, pinned revision, transformations, limitations, counts, and reproducible checksums.
 
-The new Anki card renderer uses its own escaped HTML/CSS and does not use `@read-frog/layout-engine`. The existing extension still depends on that package, whose 0.2.0 license is proprietary and restricts use/distribution to unmodified Read Frog products as distributed by its owner or written permission. This feature does not replace that dependency or establish permission to redistribute the entire fork. Review the package's [published license](https://cdn.jsdelivr.net/npm/@read-frog/layout-engine@0.2.0/LICENSE) before distribution. No remote push, PR, or publication is part of this change.
+The new Anki card renderer uses its own escaped HTML/CSS and does not use `@read-frog/layout-engine`. The existing extension still depends on that package, whose 0.2.0 license is proprietary and restricts use/distribution to unmodified Read Frog products as distributed by its owner or written permission. This feature does not replace that dependency or establish permission to redistribute the entire fork. Review the package's [published license](https://cdn.jsdelivr.net/npm/@read-frog/layout-engine@0.2.0/LICENSE) before distribution. Dependency package contents and local browser/test data are not committed to this fork.
 
 ## Local verification
 
@@ -53,3 +59,11 @@ WXT_SKIP_ENV_VALIDATION=true pnpm build
 ```
 
 `SKIP_FREE_API=true` intentionally skips the upstream live external translation suite. `WXT_SKIP_ENV_VALIDATION=true` is suitable for a local unpacked build without production OAuth/analytics credentials; it is not production deployment validation. The ordinary unit/integration suites use isolated stores, mock AnkiConnect and synthetic text/audio. `RUN_LIVE_ANKI_TTS=true pnpm exec vitest run src/utils/anki/__tests__/edge-tts.live.test.ts` explicitly opts into two live Microsoft requests using fixed synthetic text; it is skipped otherwise. They do not touch a personal Anki collection. The final implementation report records which additional browser, real Anki, and real Edge TTS checks actually ran.
+
+## Repeated local development and rollback
+
+`pnpm build` produces `.output/chrome-mv3`. For a persistent local handoff with a configured identity, see [local handoff setup](LOCAL-HANDOFF.md). Preserve the existing extension ID and browser profile when replacing a build, and reload both the extension and its host webpage after a content-script change.
+
+Rollback the extension by loading an earlier verified unpacked build under the same configured ID, without uninstalling or clearing its data. Retain the build and local identity configuration outside Git. A code rollback does not remove collected notes or reset review history. Older exporters do not understand separated-phrase span metadata: use a recent compatible build if the queue or portable note data contains separated examples.
+
+Main-branch pushes and pull requests run the offline check workflow. Automatic release packaging remains limited to the upstream repository; pushing this fork does not publish dependency binaries or store packages.
