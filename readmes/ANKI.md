@@ -66,4 +66,4 @@ WXT_SKIP_ENV_VALIDATION=true pnpm build
 
 Rollback the extension by loading an earlier verified unpacked build under the same configured ID, without uninstalling or clearing its data. Retain the build and local identity configuration outside Git. A code rollback does not remove collected notes or reset review history. Older exporters do not understand separated-phrase span metadata: use a recent compatible build if the queue or portable note data contains separated examples.
 
-Main-branch pushes and pull requests run the offline check workflow. Automatic release packaging remains limited to the upstream repository; pushing this fork does not publish dependency binaries or store packages.
+Main-branch pushes, pull requests and manual dispatch run the offline check workflow. Automatic release packaging remains limited to the upstream repository; pushing this fork does not publish dependency binaries or store packages.

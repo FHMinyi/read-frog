@@ -1,6 +1,7 @@
 name: Test & Build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -12,10 +13,10 @@ permissions:
   contents: read
 
 env:
-  WXT_SKIP_ENV_VALIDATION: true
-  SKIP_FREE_API: true
-  RUN_LIVE_ANKI_CONNECT: false
-  RUN_LIVE_ANKI_TTS: false
+  WXT_SKIP_ENV_VALIDATION: "true"
+  SKIP_FREE_API: "true"
+  RUN_LIVE_ANKI_CONNECT: "false"
+  RUN_LIVE_ANKI_TTS: "false"
 
 jobs:
   test-and-build:
