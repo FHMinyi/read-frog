@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
-import { cp, lstat, mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises"
+import { cp, lstat, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -72,8 +72,7 @@ export async function prepareLocalHandoff(sourceRoot, timestamp = new Date().toI
   const destination = path.join(handoff, "chrome-mv3")
   const token = timestamp.replace(/[^0-9TZ]/g, "")
   const stage = `${destination}.staging-${token}`
-  const backup = `${destination}-before-local-${token}`
-  assert(!(await exists(stage)) && !(await exists(backup)), "Delivery stage/backup already exists")
+  assert(!(await exists(stage)), "Delivery stage already exists")
   const manifest = JSON.parse(await readFile(path.join(build, "manifest.json"), "utf8"))
   assert.equal(manifest.manifest_version, 3)
   if (await exists(destination)) {
@@ -128,17 +127,11 @@ export async function prepareLocalHandoff(sourceRoot, timestamp = new Date().toI
     identityMethod: "Base64 manifest.key decoding and Chromium SHA256 extension ID generation",
     identityRuntimeVerified: false,
     browserPathSwitched: false,
-    backup: (await exists(destination)) ? backup : null,
     files: deliveredHashes,
   }
   await writeFile(path.join(stage, "BUILD-INFO.json"), `${JSON.stringify(receipt, null, 2)}\n`)
-  if (receipt.backup) await rename(destination, backup)
-  try {
-    await rename(stage, destination)
-  } catch (error) {
-    if (receipt.backup) await rename(backup, destination)
-    throw error
-  }
+  await rm(destination, { recursive: true, force: true })
+  await rename(stage, destination)
   await writeFile(
     path.join(handoff, "LOCAL-BUILD-RECEIPT.json"),
     `${JSON.stringify(receipt, null, 2)}\n`,
@@ -153,7 +146,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     JSON.stringify(
       {
         destination: receipt.destination,
-        backup: receipt.backup,
         extensionId: receipt.extensionId,
         versionName: receipt.versionName,
         validators: receipt.validators,

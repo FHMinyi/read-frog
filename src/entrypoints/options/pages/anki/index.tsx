@@ -17,6 +17,7 @@ export function AnkiPage() {
   const [decks, setDecks] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cleanupFailures, setCleanupFailures] = useState<string[]>([])
   const [notice, setNotice] = useState<string | null>(null)
   const draft = settings ?? snapshot?.settings ?? DEFAULT_ANKI_SETTINGS
   const patch = (next: Partial<AnkiSettings>) =>
@@ -114,6 +115,18 @@ export function AnkiPage() {
             </Button>
           </div>
         </div>
+        <div className="space-y-2 rounded-lg border p-4">
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="anki-route-cet4">{i18n.t("anki.routeCet4")}</Label>
+            <Switch
+              id="anki-route-cet4"
+              checked={draft.routeCet4}
+              disabled={busy}
+              onCheckedChange={(routeCet4) => patch({ routeCet4 })}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">{i18n.t("anki.routeCet4Description")}</p>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="anki-voice">{i18n.t("anki.voice")}</Label>
           <Input
@@ -147,6 +160,40 @@ export function AnkiPage() {
           {i18n.t("anki.saveAndEnable")}
         </Button>
       </form>
+      <section className="space-y-3 rounded-lg border p-4">
+        <h2 className="font-semibold">{i18n.t("anki.cleanupCet4")}</h2>
+        <p className="text-sm text-muted-foreground">{i18n.t("anki.cleanupCet4Description")}</p>
+        <p className="text-sm">
+          {i18n.t("anki.cleanupSource")}:{" "}
+          {snapshot?.settings.deckName ?? DEFAULT_ANKI_SETTINGS.deckName} → cet4
+        </p>
+        <Button
+          variant="outline"
+          disabled={busy || !snapshot}
+          onClick={() =>
+            void run(async () => {
+              setCleanupFailures([])
+              const result = await sendMessage("ankiCleanupCet4", undefined)
+              setSnapshot(result.snapshot)
+              setNotice(
+                `${i18n.t("anki.cleanupMoved")}: ${result.moved}; ${i18n.t("anki.cleanupSkipped")}: ${result.skipped}; ${i18n.t("anki.cleanupFailed")}: ${result.failures.length}`,
+              )
+              setCleanupFailures(
+                result.failures.map((failure) => `${failure.lemma}: ${failure.error}`),
+              )
+            })
+          }
+        >
+          {i18n.t("anki.cleanupRun")}
+        </Button>
+        {cleanupFailures.length > 0 && (
+          <ul role="alert" className="text-sm text-destructive">
+            {cleanupFailures.map((failure) => (
+              <li key={failure}>{failure}</li>
+            ))}
+          </ul>
+        )}
+      </section>
       {(error || loadError) && (
         <p role="alert" className="text-sm text-destructive">
           {error ?? loadError}

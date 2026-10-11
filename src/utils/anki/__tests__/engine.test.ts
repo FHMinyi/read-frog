@@ -62,6 +62,7 @@ function mockAnki() {
     number,
     { noteId: number; modelName: string; fields: Record<string, { value: string; order: number }> }
   >()
+  const cardDecks = new Map<number, string>()
   const media = new Map<string, string>()
   let backTemplate = ANKI_TEMPLATE.Back
   let id = 10
@@ -83,6 +84,17 @@ function mockAnki() {
         case "updateModelTemplates":
           backTemplate = params.model.templates.Context.Back
           return null
+        case "getDecks": {
+          const result: Record<string, number[]> = {}
+          for (const card of params.cards) {
+            const deck = cardDecks.get(card)
+            if (deck) (result[deck] ??= []).push(card)
+          }
+          return result
+        }
+        case "changeDeck":
+          for (const card of params.cards) cardDecks.set(card, params.deck)
+          return null
         case "createDeck":
           return 1
         case "findNotes":
@@ -92,6 +104,7 @@ function mockAnki() {
         case "notesInfo":
           return params.notes.map((noteId: number) => ({
             ...structuredClone(notes.get(noteId)),
+            cards: [noteId * 10],
             ...(wrongModel ? { modelName: "Basic" } : {}),
           }))
         case "retrieveMediaFile":
@@ -114,6 +127,7 @@ function mockAnki() {
           )
             throw new Error("duplicate")
           const noteId = ++id
+          cardDecks.set(noteId * 10, params.note.deckName)
           notes.set(noteId, {
             noteId,
             modelName: params.note.modelName,
@@ -146,6 +160,7 @@ function mockAnki() {
     client,
     invoke,
     notes,
+    cardDecks,
     media,
     schedule,
     setBackTemplate: (back: string) => {
@@ -202,6 +217,120 @@ afterEach(async () => {
 })
 
 describe("persistent Anki sync engine", () => {
+  it("routes only confirmed CET4 words and leaves other vocabulary in the default deck", async () => {
+    const { engine, anki } = await setup(mockAnki(), { routeCet4: true })
+    await engine.enqueue([
+      capture("She has ability.", "ability"),
+      phraseCapture(),
+      capture("We study photosynthesis.", "photosynthesis"),
+      { ...capture("May is here.", "May"), partOfSpeech: "proper noun" },
+    ])
+    await engine.processQueue()
+    const entries = (await engine.getSnapshot()).entries
+    expect(entries.find((entry) => entry.lemma === "ability")?.deckName).toBe("cet4")
+    expect(
+      entries
+        .filter((entry) => entry.lemma !== "ability")
+        .every((entry) => entry.deckName === "Read Frog"),
+    ).toBe(true)
+    expect([...anki.cardDecks.values()].filter((deck) => deck === "cet4")).toHaveLength(1)
+    expect(actionCount(anki, "changeDeck")).toBe(0)
+  })
+
+  it("keeps routing off by default and retargets only unsynced entries when toggled", async () => {
+    const { engine, anki } = await setup()
+    await engine.enqueue([capture("She has ability.", "ability")])
+    await engine.processQueue()
+    await engine.enqueue([capture("We abandon the plan.", "abandon")])
+    await engine.updateSettings({ routeCet4: true })
+    await engine.processQueue()
+    expect([...anki.cardDecks.values()]).toEqual(["Read Frog", "cet4"])
+    await engine.updateSettings({ routeCet4: false })
+    expect([...anki.cardDecks.values()]).toEqual(["Read Frog", "cet4"])
+    expect(actionCount(anki, "changeDeck")).toBe(0)
+  })
+
+  it("explicit cleanup moves the same card without adding notes, media or changing fields", async () => {
+    const { engine, anki, synthesize } = await setup()
+    await engine.enqueue([capture("She has ability.", "ability")])
+    await engine.processQueue()
+    const original = structuredClone([...anki.notes.values()])
+    const calls = synthesize.mock.calls.length
+    anki.invoke.mockClear()
+    const result = await engine.cleanupCet4()
+    expect(result.moved).toBe(1)
+    expect(result.failures).toEqual([])
+    expect(result.snapshot.settings.routeCet4).toBe(false)
+    expect(result.snapshot.entries[0]?.deckName).toBe("cet4")
+    expect([...anki.notes.values()]).toEqual(original)
+    expect([...anki.cardDecks]).toEqual([[original[0]!.noteId * 10, "cet4"]])
+    expect(synthesize).toHaveBeenCalledTimes(calls)
+    expect(actionCount(anki, "addNote")).toBe(0)
+    expect(actionCount(anki, "updateNoteFields")).toBe(0)
+    expect(actionCount(anki, "storeMediaFile")).toBe(0)
+    expect((await engine.cleanupCet4()).moved).toBe(0)
+    expect(actionCount(anki, "changeDeck")).toBe(1)
+  })
+
+  it("skips manually moved and missing cards and refuses incompatible remote notes", async () => {
+    const { engine, anki } = await setup()
+    await engine.enqueue([
+      capture("She has ability.", "ability"),
+      capture("We abandon the plan.", "abandon"),
+    ])
+    await engine.processQueue()
+    const cards = [...anki.cardDecks.keys()]
+    anki.cardDecks.set(cards[0]!, "Hand sorted")
+    anki.notes.delete(cards[1]! / 10)
+    expect((await engine.cleanupCet4()).skipped).toBe(2)
+    expect(actionCount(anki, "changeDeck")).toBe(0)
+    anki.mismatchModel()
+    expect((await engine.cleanupCet4()).failures).toHaveLength(1)
+    expect(actionCount(anki, "changeDeck")).toBe(0)
+  })
+
+  it("requires read-back and recovers a moved card after a lost response", async () => {
+    const { engine, anki } = await setup()
+    await engine.enqueue([capture("She has ability.", "ability")])
+    await engine.processQueue()
+    const invoke = anki.client.invoke
+    anki.client.invoke = async <T>(
+      action: string,
+      params?: Record<string, unknown>,
+    ): Promise<T> => {
+      const result = await invoke<T>(action, params)
+      if (action === "changeDeck") throw new Error("lost response")
+      return result
+    }
+    const failed = await engine.cleanupCet4()
+    expect(failed.moved).toBe(0)
+    expect(failed.failures).toHaveLength(1)
+    expect(failed.snapshot.entries[0]?.deckName).toBe("Read Frog")
+    anki.client.invoke = invoke
+    const recovered = await engine.cleanupCet4()
+    expect(recovered.failures).toEqual([])
+    expect(recovered.snapshot.entries[0]?.deckName).toBe("cet4")
+    expect(actionCount(anki, "changeDeck")).toBe(1)
+  })
+
+  it("does not report success if Anki ignores a move", async () => {
+    const { engine, anki } = await setup()
+    await engine.enqueue([capture("She has ability.", "ability")])
+    await engine.processQueue()
+    const invoke = anki.client.invoke
+    anki.client.invoke = async <T>(
+      action: string,
+      params?: Record<string, unknown>,
+    ): Promise<T> => {
+      if (action === "changeDeck") return null as T
+      return invoke<T>(action, params)
+    }
+    const result = await engine.cleanupCet4()
+    expect(result.moved).toBe(0)
+    expect(result.failures[0]?.error).toContain("did not confirm")
+    expect(result.snapshot.entries[0]?.deckName).toBe("Read Frog")
+  })
+
   it("invalidates review counts only after confirmed sync, not local enqueue or failure", async () => {
     const { dependencies, anki } = await setup()
     const onSynced = vi.fn<() => void>()

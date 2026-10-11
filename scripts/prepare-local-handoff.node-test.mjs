@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { test } from "node:test"
@@ -42,7 +42,7 @@ async function fixture(t) {
   return { source, build, current, manifest }
 }
 
-test("delivery preserves origin, permissions and previous files and records verifiable build hashes", async (t) => {
+test("delivery preserves origin and permissions, replaces stale files without backups and records build hashes", async (t) => {
   const f = await fixture(t)
   const r = await prepareLocalHandoff(f.source, "2026-10-06T16:49:00.000Z")
   const manifest = JSON.parse(await readFile(path.join(f.current, "manifest.json"), "utf8"))
@@ -50,11 +50,19 @@ test("delivery preserves origin, permissions and previous files and records veri
   assert.deepEqual(manifest.permissions, f.manifest.permissions)
   assert.deepEqual(manifest.host_permissions, f.manifest.host_permissions)
   assert.match(manifest.version_name, /separated-phrases-20261006T164900000Z/)
-  assert.equal(await readFile(path.join(r.backup, "old.txt"), "utf8"), "preserve previous delivery")
+  await assert.rejects(readFile(path.join(f.current, "old.txt")), { code: "ENOENT" })
+  assert.deepEqual((await readdir(path.dirname(f.current))).sort(), [
+    "LOCAL-BUILD-RECEIPT.json",
+    "chrome-mv3",
+  ])
   assert.deepEqual(JSON.parse(await readFile(path.join(f.current, "BUILD-INFO.json"), "utf8")), r)
   assert.equal(r.identityRuntimeVerified, false)
   assert.equal(r.browserPathSwitched, false)
-  await assert.rejects(prepareLocalHandoff(f.source, "2026-10-06T16:49:00.000Z"), /already exists/)
+  await prepareLocalHandoff(f.source, "2026-10-06T16:49:00.000Z")
+  assert.deepEqual((await readdir(path.dirname(f.current))).sort(), [
+    "LOCAL-BUILD-RECEIPT.json",
+    "chrome-mv3",
+  ])
 })
 
 test("permission changes cannot silently replace the delivery", async (t) => {

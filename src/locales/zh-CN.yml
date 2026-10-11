@@ -1885,6 +1885,15 @@ languages:
   hif: 斐济印地语
 
 anki:
+  routeCet4: "将新保存的 CET4 词汇分流到 cet4 牌组"
+  routeCet4Description: "默认关闭。保存设置后，命中内置 CET4 词表的已确认单词直接进入 cet4，其余进入默认牌组。词表归属不是难度评分；短语、专有名词和未确认词形不分流。已有卡片需单独整理。"
+  cleanupCet4: "整理旧卡（可选）"
+  cleanupCet4Description: "仅在点击时执行，与新卡分流开关独立。将当前扩展保存记录中、仍在已保存设置的默认牌组内的 CET4 卡片移动到 cet4。保留卡片和学习进度，不复制、不删除；未同步、已删除、已在其他牌组或无本地记录的卡片不处理。请先打开 Anki；失败可重试。"
+  cleanupSource: "使用已保存的牌组设置"
+  cleanupRun: "将符合条件的旧卡移动到 cet4"
+  cleanupMoved: "已确认移动"
+  cleanupSkipped: "跳过"
+  cleanupFailed: "失败（可重试）"
   reviewTitle: "在 Anki 中学习"
   reviewAvailable: "Anki · 今日可学习 $1 张"
   reviewBreakdown: "新卡 $1 · 学习中 $2 · 待复习 $3"

@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   updateSettings: vi
     .fn<(...args: unknown[]) => Promise<unknown>>()
     .mockResolvedValue({ settings: {}, entries: [] }),
+  cleanupCet4: vi.fn<() => Promise<unknown>>().mockResolvedValue({ moved: 1 }),
   retry: vi
     .fn<(...args: unknown[]) => Promise<unknown>>()
     .mockResolvedValue({ settings: {}, entries: [] }),
@@ -70,6 +71,7 @@ describe("Anki background lifecycle", () => {
   })
   it("registers every local message and durable retry wake synchronously", () => {
     expect([...mocks.handlers.keys()].sort()).toEqual([
+      "ankiCleanupCet4",
       "ankiDeckNames",
       "ankiEnqueue",
       "ankiGetReviewStatus",
@@ -84,6 +86,13 @@ describe("Anki background lifecycle", () => {
     mocks.alarmListeners[0]!({ name: ANKI_RETRY_ALARM })
     mocks.startupListeners[0]!()
     expect(mocks.processQueue).toHaveBeenCalledTimes(3)
+  })
+  it("runs cleanup only on its explicit message without changing routing settings", async () => {
+    expect(mocks.cleanupCet4).not.toHaveBeenCalled()
+    const result = await mocks.handlers.get("ankiCleanupCet4")!({})
+    expect(result).toEqual({ moved: 1 })
+    expect(mocks.cleanupCet4).toHaveBeenCalledOnce()
+    expect(mocks.updateSettings).not.toHaveBeenCalled()
   })
   it("routes statistics requests and invalidates counts when settings are saved", async () => {
     await mocks.handlers.get("ankiGetReviewStatus")!({ data: { force: true } })

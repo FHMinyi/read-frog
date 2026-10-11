@@ -1,8 +1,16 @@
 import type { AnkiSynthesizer } from "./audio"
 import type { AnkiClient } from "./client"
 import type { AnkiStore } from "./store"
-import type { AnkiCapture, AnkiEntry, AnkiExample, AnkiSettings, AnkiSnapshot } from "./types"
+import type {
+  AnkiCapture,
+  AnkiCleanupResult,
+  AnkiEntry,
+  AnkiExample,
+  AnkiSettings,
+  AnkiSnapshot,
+} from "./types"
 import { getAnkiAudio, synthesizeAnkiAudio } from "./audio"
+import { getCetMembership } from "./cet"
 import { AnkiTransportError, createAnkiClient, validateAnkiEndpoint } from "./client"
 import { normalizeCapture } from "./normalization"
 import {
@@ -18,6 +26,7 @@ import { createAnkiStore } from "./store"
 
 interface NoteInfo {
   noteId: number
+  cards: number[]
   modelName: string
   fields: Record<string, { value: string; order: number }>
 }
@@ -26,6 +35,7 @@ export interface AnkiEngine {
   enqueue: (captures: AnkiCapture[]) => Promise<AnkiSnapshot>
   getSnapshot: () => Promise<AnkiSnapshot>
   updateSettings: (settings: Partial<AnkiSettings>) => Promise<AnkiSnapshot>
+  cleanupCet4: () => Promise<AnkiCleanupResult>
   retry: (key?: string) => Promise<AnkiSnapshot>
   processQueue: () => Promise<void>
 }
@@ -192,6 +202,19 @@ async function findNote(client: AnkiClient, entry: AnkiEntry): Promise<NoteInfo 
       "An existing Anki note does not match the Read Frog model/key; it was left unchanged",
     )
   return note
+}
+
+export const CET4_DECK = "cet4"
+
+function isCet4Entry(entry: Pick<AnkiEntry, "lemma" | "identity">): boolean {
+  return entry.identity.startsWith("word:") && getCetMembership(entry.lemma).includes("CET4")
+}
+
+function destinationDeck(
+  entry: Pick<AnkiEntry, "lemma" | "identity">,
+  settings: AnkiSettings,
+): string {
+  return settings.routeCet4 && isCet4Entry(entry) ? CET4_DECK : settings.deckName
 }
 
 export function createAnkiEngine(options: EngineOptions): AnkiEngine {
@@ -410,7 +433,7 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
               attempts: 0,
               nextRetryAt: 0,
               updatedAt: now(),
-              deckName: settings.deckName,
+              deckName: destinationDeck(item, settings),
             }
           const examples = mergeAnkiExamples(existing.examples, [item.example])
           if (JSON.stringify(examples) === JSON.stringify(existing.examples)) return existing
@@ -438,10 +461,12 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
       if (!/^[a-z]{2,3}-[A-Za-z0-9-]+$/.test(settings.voice) || settings.voice.length > 100)
         throw new Error("Enter a valid Edge TTS voice name")
       if (typeof settings.enabled !== "boolean") throw new Error("Invalid Anki enabled setting")
+      if (typeof settings.routeCet4 !== "boolean") throw new Error("Invalid CET4 routing setting")
       await store.setSettings(settings)
       const audioOrEndpointChanged =
         settings.voice !== previous.voice || settings.endpoint !== previous.endpoint
-      const deckChanged = settings.deckName !== previous.deckName
+      const deckChanged =
+        settings.deckName !== previous.deckName || settings.routeCet4 !== previous.routeCet4
       if (audioOrEndpointChanged || deckChanged) {
         for (const entry of await store.listEntries()) {
           await store.changeEntry(entry.key, (latest = entry) => {
@@ -449,7 +474,7 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
             if (!audioOrEndpointChanged && !initialDeckChanged) return latest
             return {
               ...latest,
-              deckName: initialDeckChanged ? settings.deckName : latest.deckName,
+              deckName: initialDeckChanged ? destinationDeck(latest, settings) : latest.deckName,
               revision: latest.revision + 1,
               status: "pending",
               nextRetryAt: 0,
@@ -459,6 +484,76 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
         }
       }
       return getSnapshot()
+    },
+    async cleanupCet4() {
+      const result: AnkiCleanupResult = {
+        snapshot: await getSnapshot(),
+        moved: 0,
+        skipped: 0,
+        failures: [],
+      }
+      // Share the sync lock: a queue drain must never overwrite the local deck after a move.
+      await withLock(async () => {
+        const settings = await store.getSettings()
+        const client = makeClient(settings.endpoint)
+        for (const entry of await store.listEntries()) {
+          if (!isCet4Entry(entry)) continue
+          try {
+            const note = await findNote(client, entry)
+            if (!note) {
+              result.skipped++
+              continue
+            }
+            remoteExamples(note, entry)
+            if (
+              !Array.isArray(note.cards) ||
+              note.cards.length !== 1 ||
+              !Number.isSafeInteger(note.cards[0]) ||
+              note.cards[0]! <= 0
+            )
+              throw new Error("Expected one existing Read Frog card; left unchanged")
+            const decks = await client.invoke<Record<string, number[]>>("getDecks", {
+              cards: note.cards,
+            })
+            const sourceCards = decks[settings.deckName] ?? []
+            if (decks[CET4_DECK]?.includes(note.cards[0]!)) {
+              // Recover a successful move whose response/local write was interrupted.
+              await store.changeEntry(entry.key, (latest = entry) => ({
+                ...latest,
+                deckName: CET4_DECK,
+              }))
+              result.skipped++
+              continue
+            }
+            if (sourceCards.length !== 1 || sourceCards[0] !== note.cards[0]) {
+              result.skipped++
+              continue
+            }
+            const current = await store.getSettings()
+            if (current.endpoint !== settings.endpoint || current.deckName !== settings.deckName)
+              throw new Error("Anki settings changed; run cleanup again")
+            await client.invoke("changeDeck", { cards: note.cards, deck: CET4_DECK })
+            const verified = await client.invoke<Record<string, number[]>>("getDecks", {
+              cards: note.cards,
+            })
+            if (!verified[CET4_DECK]?.includes(note.cards[0]!))
+              throw new Error("Anki did not confirm the moved card; run cleanup again")
+            await store.changeEntry(entry.key, (latest = entry) => ({
+              ...latest,
+              deckName: CET4_DECK,
+            }))
+            result.moved++
+            options.onSynced?.()
+          } catch (error) {
+            result.failures.push({
+              lemma: entry.lemma,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        }
+      })
+      result.snapshot = await getSnapshot()
+      return result
     },
     async retry(key) {
       for (const entry of await store.listEntries()) {
@@ -492,6 +587,7 @@ export const ankiEngine: AnkiEngine = {
   enqueue: (captures) => getEngine().enqueue(captures),
   getSnapshot: () => getEngine().getSnapshot(),
   updateSettings: (settings) => getEngine().updateSettings(settings),
+  cleanupCet4: () => getEngine().cleanupCet4(),
   retry: (key) => getEngine().retry(key),
   processQueue: () => getEngine().processQueue(),
 }

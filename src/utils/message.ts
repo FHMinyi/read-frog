@@ -19,7 +19,13 @@ import type {
   TTSPlaybackStartResponse,
   TTSPlaybackStopRequest,
 } from "@/types/tts-playback"
-import type { AnkiCapture, AnkiReviewStatus, AnkiSettings, AnkiSnapshot } from "@/utils/anki/types"
+import type {
+  AnkiCapture,
+  AnkiCleanupResult,
+  AnkiReviewStatus,
+  AnkiSettings,
+  AnkiSnapshot,
+} from "@/utils/anki/types"
 import type { GlossarySnapshot } from "@/utils/glossary/active-matcher"
 import type { MatchedTerm } from "@/utils/glossary/types"
 import type { HostedAiStatus } from "@/utils/hosted-ai/types"
@@ -32,6 +38,7 @@ interface ProtocolMap {
   ankiGetSnapshot: () => Promise<AnkiSnapshot>
   ankiGetReviewStatus: (data?: { force?: boolean }) => Promise<AnkiReviewStatus>
   ankiSaveSettings: (data: AnkiSettings) => Promise<AnkiSnapshot>
+  ankiCleanupCet4: () => Promise<AnkiCleanupResult>
   ankiRetry: () => Promise<AnkiSnapshot>
   ankiDeckNames: (data: { endpoint: string }) => Promise<string[]>
 

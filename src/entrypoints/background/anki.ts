@@ -32,6 +32,7 @@ export function setupAnkiMessageHandlers() {
     drain()
     return snapshot
   })
+  onMessage("ankiCleanupCet4", () => ankiEngine.cleanupCet4())
   onMessage("ankiRetry", async () => {
     const snapshot = await ankiEngine.retry()
     drain()

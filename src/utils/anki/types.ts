@@ -48,6 +48,7 @@ export interface AnkiSettings {
   deckName: string
   voice: string
   enabled: boolean
+  routeCet4: boolean
 }
 
 export interface AnkiSnapshot {
@@ -73,4 +74,12 @@ export const DEFAULT_ANKI_SETTINGS: AnkiSettings = {
   deckName: "Read Frog",
   voice: "en-US-AriaNeural",
   enabled: false,
+  routeCet4: false,
+}
+
+export interface AnkiCleanupResult {
+  snapshot: AnkiSnapshot
+  moved: number
+  skipped: number
+  failures: { lemma: string; error: string }[]
 }

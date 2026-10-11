@@ -71,6 +71,40 @@ describe("Anki setup page", () => {
       expect(document.querySelector('option[value="English"]')).toBeInTheDocument(),
     )
   })
+  it("saves routing only on submit and never implicitly cleans existing cards", async () => {
+    mocks.send.mockResolvedValue({
+      settings: { ...DEFAULT_ANKI_SETTINGS, enabled: true, routeCet4: true },
+      entries: [],
+    })
+    render(<AnkiPage />)
+    const toggle = screen.getByRole("switch", { name: i18n.t("anki.routeCet4") })
+    expect(toggle).not.toBeChecked()
+    fireEvent.click(toggle)
+    expect(mocks.send).not.toHaveBeenCalledWith("ankiCleanupCet4", undefined)
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("anki.saveAndEnable") }))
+    await waitFor(() =>
+      expect(mocks.send).toHaveBeenCalledWith("ankiSaveSettings", {
+        ...DEFAULT_ANKI_SETTINGS,
+        enabled: true,
+        routeCet4: true,
+      }),
+    )
+  })
+  it("runs cleanup independently using saved settings and reports partial failures", async () => {
+    mocks.send.mockResolvedValue({
+      snapshot: mocks.snapshot,
+      moved: 2,
+      skipped: 1,
+      failures: [{ lemma: "work", error: "offline" }],
+    })
+    render(<AnkiPage />)
+    fireEvent.change(screen.getByLabelText(i18n.t("anki.deck")), { target: { value: "Unsaved" } })
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("anki.cleanupRun") }))
+    await waitFor(() => expect(mocks.send).toHaveBeenCalledWith("ankiCleanupCet4", undefined))
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("work: offline"))
+    expect(screen.getByText(/→ cet4/)).toHaveTextContent("Read Frog")
+    expect(screen.getByText(new RegExp(`${i18n.t("anki.cleanupMoved")}: 2`))).toBeVisible()
+  })
   it("enables sync on the first explicit save", async () => {
     mocks.send.mockResolvedValue({
       settings: { ...DEFAULT_ANKI_SETTINGS, enabled: true },
@@ -105,7 +139,7 @@ describe("Anki setup page", () => {
     fireEvent.change(screen.getByLabelText(i18n.t("anki.endpoint")), {
       target: { value: "unfinished" },
     })
-    fireEvent.click(screen.getByRole("switch"))
+    fireEvent.click(screen.getByRole("switch", { name: i18n.t("anki.enable") }))
     await waitFor(() =>
       expect(mocks.send).toHaveBeenCalledWith("ankiSaveSettings", {
         ...DEFAULT_ANKI_SETTINGS,
