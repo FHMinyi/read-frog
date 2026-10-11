@@ -92,7 +92,7 @@ export function mergeAnkiExamples(current: AnkiExample[], incoming: AnkiExample[
   return merged
 }
 
-function remoteExamples(note: NoteInfo, entry: AnkiEntry): AnkiExample[] {
+function remoteExamples(note: NoteInfo, entry: Pick<AnkiEntry, "key" | "identity">): AnkiExample[] {
   const encoded = note.fields.Data?.value
   // Refuse to replace an opaque/malformed remote note, which could erase examples from another machine.
   if (!encoded?.startsWith("rf1:") || encoded.length > 4_000_000) {
@@ -496,15 +496,22 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
       await withLock(async () => {
         const settings = await store.getSettings()
         const client = makeClient(settings.endpoint)
-        for (const entry of await store.listEntries()) {
-          if (!isCet4Entry(entry)) continue
+        // Use a fixed model query, then compare actual deck names exactly. This avoids
+        // interpreting user deck names as search syntax or including child decks by accident.
+        const ids = await client.invoke<number[]>("findNotes", {
+          query: `"note:${ANKI_MODEL_NAME}"`,
+        })
+        for (const noteId of ids) {
+          let lemma = `Note ${noteId}`
           try {
-            const note = await findNote(client, entry)
-            if (!note) {
-              result.skipped++
-              continue
-            }
-            remoteExamples(note, entry)
+            const [note] = await client.invoke<NoteInfo[]>("notesInfo", { notes: [noteId] })
+            if (
+              !note ||
+              note.noteId !== noteId ||
+              note.modelName !== ANKI_MODEL_NAME ||
+              ANKI_FIELDS.some((field) => !note.fields?.[field])
+            )
+              throw new Error("Existing note does not match the Read Frog model; left unchanged")
             if (
               !Array.isArray(note.cards) ||
               note.cards.length !== 1 ||
@@ -516,12 +523,46 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
               cards: note.cards,
             })
             const sourceCards = decks[settings.deckName] ?? []
+            if (
+              !sourceCards.includes(note.cards[0]!) &&
+              !decks[CET4_DECK]?.includes(note.cards[0]!)
+            ) {
+              result.skipped++
+              continue
+            }
+            const encoded = note.fields.Data?.value
+            if (!encoded?.startsWith("rf1:") || encoded.length > 4_000_000)
+              throw new Error("Missing or incompatible Read Frog data; left unchanged")
+            const parsed: unknown = JSON.parse(decodeURIComponent(encoded.slice(4)))
+            if (
+              typeof parsed !== "object" ||
+              parsed === null ||
+              !("examples" in parsed) ||
+              !Array.isArray(parsed.examples) ||
+              !parsed.examples.length
+            )
+              throw new Error("Missing Read Frog examples; left unchanged")
+            // Rebuild the canonical identity from the saved capture, not the displayed HTML.
+            const entry = normalizeCapture(parsed.examples[0])
+            lemma = entry.lemma
+            if (note.fields.RFKey?.value !== entry.key)
+              throw new Error("Read Frog key does not match its example; left unchanged")
+            remoteExamples(note, entry)
+            if (!isCet4Entry(entry)) {
+              result.skipped++
+              continue
+            }
+            const updateLocalDeck = async () => {
+              const local = await store.getEntry(entry.key)
+              if (local)
+                await store.changeEntry(entry.key, (latest = local) => ({
+                  ...latest,
+                  deckName: CET4_DECK,
+                }))
+            }
             if (decks[CET4_DECK]?.includes(note.cards[0]!)) {
               // Recover a successful move whose response/local write was interrupted.
-              await store.changeEntry(entry.key, (latest = entry) => ({
-                ...latest,
-                deckName: CET4_DECK,
-              }))
+              await updateLocalDeck()
               result.skipped++
               continue
             }
@@ -538,15 +579,12 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
             })
             if (!verified[CET4_DECK]?.includes(note.cards[0]!))
               throw new Error("Anki did not confirm the moved card; run cleanup again")
-            await store.changeEntry(entry.key, (latest = entry) => ({
-              ...latest,
-              deckName: CET4_DECK,
-            }))
+            await updateLocalDeck()
             result.moved++
             options.onSynced?.()
           } catch (error) {
             result.failures.push({
-              lemma: entry.lemma,
+              lemma,
               error: error instanceof Error ? error.message : String(error),
             })
           }

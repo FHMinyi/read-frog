@@ -99,7 +99,11 @@ function mockAnki() {
           return 1
         case "findNotes":
           return [...notes.values()]
-            .filter((note) => params.query.includes(note.fields.RFKey!.value))
+            .filter(
+              (note) =>
+                params.query === `"note:${ANKI_MODEL_NAME}"` ||
+                params.query.includes(note.fields.RFKey!.value),
+            )
             .map((note) => note.noteId)
         case "notesInfo":
           return params.notes.map((noteId: number) => ({
@@ -250,6 +254,62 @@ describe("persistent Anki sync engine", () => {
     expect(actionCount(anki, "changeDeck")).toBe(0)
   })
 
+  it("moves a remote CET4 card with no local record, preserving its note and card", async () => {
+    const first = await setup()
+    await first.engine.enqueue([capture("Graphic design is my passion.", "passion")])
+    await first.engine.processQueue()
+    const notes = structuredClone([...first.anki.notes.values()])
+    const second = await setup(first.anki)
+    first.anki.invoke.mockClear()
+    const result = await second.engine.cleanupCet4()
+    expect(result.moved).toBe(1)
+    expect(result.failures).toEqual([])
+    expect(result.snapshot.entries).toEqual([])
+    expect([...first.anki.notes.values()]).toEqual(notes)
+    expect([...first.anki.cardDecks]).toEqual([[notes[0]!.noteId * 10, "cet4"]])
+    expect(actionCount(first.anki, "addNote")).toBe(0)
+    expect(actionCount(first.anki, "updateNoteFields")).toBe(0)
+    expect(second.synthesize).not.toHaveBeenCalled()
+  })
+
+  it("refuses malformed remote identities and leaves non-CET4 words untouched without local records", async () => {
+    const first = await setup()
+    await first.engine.enqueue([
+      capture("Graphic design is my passion.", "passion"),
+      capture("We abolish the rule.", "abolish"),
+      phraseCapture(),
+    ])
+    await first.engine.processQueue()
+    const note = [...first.anki.notes.values()].find((candidate) =>
+      candidate.fields.Data!.value.includes("passion"),
+    )!
+    note.fields.RFKey!.value = `rfanki_${"0".repeat(64)}`
+    const second = await setup(first.anki)
+    const result = await second.engine.cleanupCet4()
+    expect(result.moved).toBe(0)
+    expect(result.failures).toHaveLength(1)
+    expect(result.failures[0]?.error).toContain("key does not match")
+    expect(actionCount(first.anki, "changeDeck")).toBe(0)
+  })
+
+  it("does not move remote cards in a child deck or a manually chosen deck", async () => {
+    const first = await setup()
+    await first.engine.enqueue([
+      capture("Graphic design is my passion.", "passion"),
+      capture("She has ability.", "ability"),
+    ])
+    await first.engine.processQueue()
+    const cards = [...first.anki.cardDecks.keys()]
+    first.anki.cardDecks.set(cards[0]!, "Read Frog::Child")
+    first.anki.cardDecks.set(cards[1]!, "Manual")
+    const second = await setup(first.anki)
+    const result = await second.engine.cleanupCet4()
+    expect(result.moved).toBe(0)
+    expect(result.skipped).toBe(2)
+    expect(result.failures).toEqual([])
+    expect(actionCount(first.anki, "changeDeck")).toBe(0)
+  })
+
   it("explicit cleanup moves the same card without adding notes, media or changing fields", async () => {
     const { engine, anki, synthesize } = await setup()
     await engine.enqueue([capture("She has ability.", "ability")])
@@ -282,7 +342,7 @@ describe("persistent Anki sync engine", () => {
     const cards = [...anki.cardDecks.keys()]
     anki.cardDecks.set(cards[0]!, "Hand sorted")
     anki.notes.delete(cards[1]! / 10)
-    expect((await engine.cleanupCet4()).skipped).toBe(2)
+    expect((await engine.cleanupCet4()).skipped).toBe(1)
     expect(actionCount(anki, "changeDeck")).toBe(0)
     anki.mismatchModel()
     expect((await engine.cleanupCet4()).failures).toHaveLength(1)

@@ -1888,7 +1888,7 @@ anki:
   routeCet4: "Route new CET4 vocabulary to the cet4 deck"
   routeCet4Description: "Off by default. After saving settings, confirmed words in the bundled CET4 list go directly to cet4; others use the default deck. Membership is not a difficulty score. Phrases, proper nouns and uncertain forms are excluded. Existing cards require separate cleanup."
   cleanupCet4: "Organize existing cards (optional)"
-  cleanupCet4Description: "Runs only when clicked, independently of new-card routing. Moves CET4 cards tracked by this extension from the saved default deck to cet4, keeping their cards and study progress. No copies or deletions. Unsynced, deleted, manually relocated and untracked cards are excluded. Open Anki first; failures can be retried."
+  cleanupCet4Description: "Runs only when clicked, independently of new-card routing. Scans Read Frog cards in the saved default Anki deck and moves CET4 matches to cet4, even without local browser records. Keeps cards and study progress without copies or deletions. Cards in other decks are not moved. Open Anki first; failures can be retried."
   cleanupSource: "Using saved deck settings"
   cleanupRun: "Move matching existing cards to cet4"
   cleanupMoved: "Confirmed moved"
