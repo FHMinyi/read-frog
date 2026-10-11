@@ -20,6 +20,10 @@ const mocks = vi.hoisted(() => ({
     .fn<(...args: unknown[]) => Promise<unknown>>()
     .mockResolvedValue({ settings: {}, entries: [] }),
   invoke: vi.fn<(...args: unknown[]) => Promise<string[]>>().mockResolvedValue(["Read Frog"]),
+  invalidate: vi.fn<() => void>(),
+  getStatus: vi
+    .fn<(...args: unknown[]) => Promise<unknown>>()
+    .mockResolvedValue({ state: "disabled", deckName: "Read Frog" }),
 }))
 vi.mock("wxt/browser", () => ({
   browser: {
@@ -39,6 +43,7 @@ vi.mock("@/utils/message", () => ({
   onMessage: (name: string, fn: (input: any) => any) => mocks.handlers.set(name, fn),
 }))
 vi.mock("@/utils/anki/engine", () => ({ ankiEngine: mocks }))
+vi.mock("@/utils/anki/review", () => ({ ankiReview: mocks }))
 vi.mock("@/utils/anki/client", () => ({ createAnkiClient: () => ({ invoke: mocks.invoke }) }))
 import { ANKI_RETRY_ALARM, setupAnkiMessageHandlers } from "../anki"
 
@@ -67,6 +72,7 @@ describe("Anki background lifecycle", () => {
     expect([...mocks.handlers.keys()].sort()).toEqual([
       "ankiDeckNames",
       "ankiEnqueue",
+      "ankiGetReviewStatus",
       "ankiGetSnapshot",
       "ankiRetry",
       "ankiSaveSettings",
@@ -78,6 +84,12 @@ describe("Anki background lifecycle", () => {
     mocks.alarmListeners[0]!({ name: ANKI_RETRY_ALARM })
     mocks.startupListeners[0]!()
     expect(mocks.processQueue).toHaveBeenCalledTimes(3)
+  })
+  it("routes statistics requests and invalidates counts when settings are saved", async () => {
+    await mocks.handlers.get("ankiGetReviewStatus")!({ data: { force: true } })
+    expect(mocks.getStatus).toHaveBeenCalledWith(true)
+    await mocks.handlers.get("ankiSaveSettings")!({ data: {} })
+    expect(mocks.invalidate).toHaveBeenCalledOnce()
   })
   it("persists a valid capture before kicking a network attempt", async () => {
     mocks.processQueue.mockClear()

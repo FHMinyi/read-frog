@@ -13,6 +13,7 @@ import {
   ANKI_TEMPLATE,
   renderAnkiFields,
 } from "./render"
+import { ankiReview } from "./review"
 import { createAnkiStore } from "./store"
 
 interface NoteInfo {
@@ -36,6 +37,7 @@ interface EngineOptions {
   now?: () => number
   /** Defaults to a cross-context Web Lock, released automatically when a worker dies. */
   withLock?: (run: () => Promise<void>) => Promise<void>
+  onSynced?: () => void
 }
 
 // Also serialize test/unsupported-Web-Locks environments within one JS context.
@@ -345,6 +347,7 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
         nextRetryAt: 0,
         error: undefined,
       }))
+      options.onSynced?.()
     } catch (error) {
       await store.changeEntry(entry.key, (latest = working) => {
         const newer = latest.revision !== working.revision
@@ -482,7 +485,7 @@ export function createAnkiEngine(options: EngineOptions): AnkiEngine {
 // Lazy construction avoids opening IndexedDB while WXT evaluates background modules at build time.
 let singleton: AnkiEngine | undefined
 function getEngine(): AnkiEngine {
-  singleton ??= createAnkiEngine({ store: createAnkiStore() })
+  singleton ??= createAnkiEngine({ store: createAnkiStore(), onSynced: ankiReview.invalidate })
   return singleton
 }
 export const ankiEngine: AnkiEngine = {

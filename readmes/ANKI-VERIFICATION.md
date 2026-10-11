@@ -1,3 +1,41 @@
+# Read-only Anki study count update (2026-10-11)
+
+The user removed desktop-review navigation from the requested scope. The count is now plain text: no clickable control, navigation arrow, success/error notice, background open-review message, or `guiDeckReview` call. Scheduler counts, hover breakdown, visible-surface refresh, and the Options manual refresh remain. No companion Anki add-on was installed.
+
+- Targeted UI, statistics service, background, and sync engine suites: **45 tests passed across 4 files**. The UI check verifies that clicking the count sends no additional message and that no button/link is exposed in the compact display.
+- Pre-commit full offline Vitest run: **4030 passed, 8 intentionally skipped** (384 files passed, 4 skipped). Dictionary phonetic checks (15) and local handoff checks (6) also passed.
+- Type-aware lint/type check, repository formatting, and diff whitespace checks: passed.
+- Chrome MV3 build and local handoff: passed. Build: `1.49.3 local separated-phrases-20261011T024357246Z`.
+- The browser extension has not been reloaded or visually rechecked for this update. Reload the existing local extension, then refresh the web page to load the new content script.
+- The historical desktop-navigation observations below apply to the superseded implementation; desktop foreground activation is no longer an acceptance requirement.
+
+---
+
+# Anki study-count entry verification (2026-10-10)
+
+The source adds scheduler-backed study counts and a desktop review action to selection translation/custom-action popovers and Options → Anki. Counts target the saved default deck and include its subdecks. The action rechecks endpoint, deck and active profile before starting review. It does not answer cards or change scheduling.
+
+- Final offline Vitest run: **4033 passed, 8 intentionally skipped**, with `SKIP_FREE_API=true` and all live Anki/TTS/review flags disabled.
+- Type-aware lint, repository formatting, `git diff --check`, Dictionary phonetic checks (15), and local handoff checks (6): passed.
+- Explicit read-only live review test: passed against the existing desktop collection. The service matched Anki's scheduler counts (new 1, learning 5, review 1). A missing-deck query left both the deck list and active profile unchanged. It did not add notes, answer cards or start review.
+- The live test restores Node's UTF-8 TextEncoder within that test because the shared jsdom compatibility encoder truncates non-ASCII bytes; the production transport was unchanged.
+- Chrome MV3 build and identity-preserving local handoff: passed. Edge's extension details visibly confirmed `/Users/minyi/project/read-frog-dev/handoff/chrome-mv3`, extension ID `oaddcecamhkdpggppilegaldjoopfiki`, and build suffix `20261010T090100547Z`.
+- The new Options → Anki study section rendered in Edge. That browser had sync disabled and an empty local queue; a temporary enable was restored to disabled, with the original `Read Frog` deck setting retained.
+
+**Still unverified:** an actual selection-popover click → background → Anki desktop review transition, automatic foreground activation, and the count updating after a real desktop answer. The browser tool rejected direct access to the internal `chrome-extension://` options page. This restriction was not bypassed; mocked UI/transport coverage and the read-only live statistics result are not represented as a complete browser E2E pass.
+
+The tests cover shared/forced cache refresh, profile and configuration mismatch guards, disconnection, malformed counts, missing decks, late in-flight responses after invalidation, sync completion invalidation, double clicks, zero/error UI, and stopping polling when a surface closes or its tab is hidden.
+
+To run only the read-only live statistics check with an existing deck:
+
+```sh
+RUN_LIVE_ANKI_REVIEW=true ANKI_REVIEW_DECK='Read Frog' pnpm exec vitest run src/utils/anki/__tests__/review.live.test.ts
+```
+
+Replace the example deck name with an existing deck. The test does not create its target deck.
+
+---
+
 # Current Anki verification (2026-10-07)
 
 The current source adds conservative contiguous/separated phrase capture, validated UTF-16 highlights, same-phrase append, answer-side original context, and canonical-Term phonetic instructions. The regression suite exercises the real recommendation component, save hook, background handlers and sync engine with isolated IndexedDB and mocked Anki/TTS transport. It also reproduces a current content script talking to an old rejecting worker, distinguishing inline background errors from capture toasts.

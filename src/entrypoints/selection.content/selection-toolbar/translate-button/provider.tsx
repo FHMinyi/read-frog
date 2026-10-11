@@ -24,6 +24,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { AnkiReviewEntry } from "@/components/anki/anki-review-entry"
 import { useHostedAiProviderOptions } from "@/components/llm-providers/use-hosted-ai-provider-options"
 import { toastManager } from "@/components/ui/base-ui/toast"
 import { SelectionPopover } from "@/components/ui/selection-popover"
@@ -907,6 +908,7 @@ export function SelectionTranslationProvider({ children }: { children: ReactNode
               )}
             <SelectionToolbarErrorAlert error={error} className="-mt-3" />
           </SelectionPopover.Body>
+          <AnkiReviewEntry active={isOpen} />
           <TranslateFooterContent
             paragraphsText={paragraphsText}
             providers={translateProviders}

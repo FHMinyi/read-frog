@@ -1,5 +1,6 @@
 import type { AnkiSettings } from "@/utils/anki/types"
 import { useState } from "react"
+import { AnkiReviewEntry } from "@/components/anki/anki-review-entry"
 import { useAnkiSnapshot } from "@/components/anki/use-anki"
 import { Button } from "@/components/ui/base-ui/button"
 import { Input } from "@/components/ui/base-ui/input"
@@ -47,6 +48,9 @@ export function AnkiPage() {
           <li>{i18n.t("anki.setupDeck")}</li>
         </ol>
         <p className="text-sm">{i18n.t("anki.audioRequired")}</p>
+      </section>
+      <section className="rounded-xl border bg-muted/30 p-5">
+        <AnkiReviewEntry detailed />
       </section>
       <form
         className="space-y-5"

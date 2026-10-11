@@ -19,7 +19,7 @@ import type {
   TTSPlaybackStartResponse,
   TTSPlaybackStopRequest,
 } from "@/types/tts-playback"
-import type { AnkiCapture, AnkiSettings, AnkiSnapshot } from "@/utils/anki/types"
+import type { AnkiCapture, AnkiReviewStatus, AnkiSettings, AnkiSnapshot } from "@/utils/anki/types"
 import type { GlossarySnapshot } from "@/utils/glossary/active-matcher"
 import type { MatchedTerm } from "@/utils/glossary/types"
 import type { HostedAiStatus } from "@/utils/hosted-ai/types"
@@ -30,6 +30,7 @@ import { defineExtensionMessaging } from "@webext-core/messaging"
 interface ProtocolMap {
   ankiEnqueue: (data: { captures: AnkiCapture[] }) => Promise<AnkiSnapshot>
   ankiGetSnapshot: () => Promise<AnkiSnapshot>
+  ankiGetReviewStatus: (data?: { force?: boolean }) => Promise<AnkiReviewStatus>
   ankiSaveSettings: (data: AnkiSettings) => Promise<AnkiSnapshot>
   ankiRetry: () => Promise<AnkiSnapshot>
   ankiDeckNames: (data: { endpoint: string }) => Promise<string[]>

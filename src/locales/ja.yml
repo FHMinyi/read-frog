@@ -1875,6 +1875,15 @@ languages:
   hif: フィジー・ヒンディー語
 
 anki:
+  reviewTitle: "Study in Anki"
+  reviewAvailable: "Anki · $1 cards to study"
+  reviewBreakdown: "New $1 · Learning $2 · Review $3"
+  reviewLoading: "Checking Anki…"
+  reviewDisabled: "Enable Anki sync to show study counts."
+  reviewMissingDeck: 'Deck "$1" does not exist yet. It will be created when a card syncs.'
+  reviewUnavailable: "Cannot reach Anki. Keep Anki Desktop open with AnkiConnect enabled."
+  reviewEmpty: "No cards available to study in this deck."
+  reviewRefresh: "Refresh"
   title: "Anki"
   description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
   save: "Save to Anki"

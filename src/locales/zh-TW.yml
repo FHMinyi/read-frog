@@ -1885,6 +1885,15 @@ languages:
   hif: 斐濟印地語
 
 anki:
+  reviewTitle: "在 Anki 中學習"
+  reviewAvailable: "Anki · 今日可學習 $1 張"
+  reviewBreakdown: "新卡 $1 · 學習中 $2 · 待複習 $3"
+  reviewLoading: "正在檢查 Anki…"
+  reviewDisabled: "開啟 Anki 同步後顯示學習數量。"
+  reviewMissingDeck: "牌組「$1」尚未建立，卡片同步時會自動建立。"
+  reviewUnavailable: "無法連線 Anki。請開啟 Anki 桌面版並啟用 AnkiConnect。"
+  reviewEmpty: "此牌組目前沒有可學習的卡片。"
+  reviewRefresh: "重新整理"
   title: "Anki"
   description: "Save English words and their original sentences to Anki Desktop. No Read Frog account required."
   save: "Save to Anki"

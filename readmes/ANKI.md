@@ -4,6 +4,25 @@ This fork saves dictionary results directly to a local AnkiConnect endpoint. No 
 
 ## First-time setup
 
+### Install this fork
+
+The local handoff is a production build loaded as an unpacked extension. It runs without a development server, even though Chrome/Edge require their **Developer mode** switch to load it. This installation switch is separate from the extension's build mode.
+
+For a fresh installation from source, install the repository's Node.js/pnpm versions and run:
+
+```sh
+pnpm install --frozen-lockfile
+WXT_SKIP_ENV_VALIDATION=true pnpm build
+```
+
+In Chrome (`chrome://extensions`) or Edge (`edge://extensions`), enable Developer mode, choose **Load unpacked**, and select `.output/chrome-mv3` inside this checkout (the folder containing `manifest.json`). Keep that folder in a stable location. Configure an AI provider in the extension for dictionary/translation requests; skipping build-time environment validation does not configure a provider or guarantee hosted-account features.
+
+Existing local-handoff users should continue using their configured `handoff/chrome-mv3` directory and identity; see [local handoff setup](LOCAL-HANDOFF.md). After replacing a build, reload the existing extension and refresh open webpages. A Git pull or push alone does not update an installed extension. Avoid uninstalling to update, since uninstalling can delete extension settings and queued cards.
+
+`pnpm dev` is the development workflow with a running WXT development server. `pnpm build` and `pnpm build:local` produce builds for use without that server. Publishing a GitHub Release or browser-store package is a separate step: this fork's push workflow runs checks, while automatic release packaging is restricted to the upstream repository. The official store extension is a separate distribution and does not acquire this fork's changes from a push here.
+
+### Configure Anki
+
 Use a separate browser profile for the first end-to-end test. Do not run the official Read Frog extension and this fork on the same page at the same time, as their content scripts can interfere. Loading the unpacked build keeps the upstream extension permissions; review those permissions before enabling it.
 
 1. Install desktop [Anki](https://apps.ankiweb.net/) and [AnkiConnect](https://ankiweb.net/shared/info/2055492159) from their official sources. Keep Anki running while exporting. Use a separate test profile first, with no personal collection.
@@ -46,6 +65,16 @@ For phone review, use Anki's normal collection **and media** sync, then wait unt
 CET labels mean exact membership in a pinned, community-maintained ECDICT reference list. They are not official exam coverage, a ranking, or an AI estimate. Both labels can occur; no match stays empty and does not mean “advanced.” See [data provenance](../src/utils/anki/data/README.md) and the bundled `public/licenses/anki-ecdict.txt` for the MIT license, pinned revision, transformations, limitations, counts, and reproducible checksums.
 
 The new Anki card renderer uses its own escaped HTML/CSS and does not use `@read-frog/layout-engine`. The existing extension still depends on that package, whose 0.2.0 license is proprietary and restricts use/distribution to unmodified Read Frog products as distributed by its owner or written permission. This feature does not replace that dependency or establish permission to redistribute the entire fork. Review the package's [published license](https://cdn.jsdelivr.net/npm/@read-frog/layout-engine@0.2.0/LICENSE) before distribution. Dependency package contents and local browser/test data are not committed to this fork.
+
+## Study counts
+
+With Anki sync enabled, selection translation and custom-action popovers show **Anki · N cards to study** when the configured default deck has available cards. Hover for the deck name and New / Learning / Review breakdown. **Options → Anki** shows the breakdown, unavailable/missing-deck states, and a manual Refresh button.
+
+Counts come from AnkiConnect's `getDeckStats` scheduler tree, including the selected deck's subdecks. They include all cards in that deck, not only notes exported by Read Frog. Local pending exports do not count until they reach Anki. Changing the default deck changes this entry's target; already-synced notes remain in their existing decks. The extension checks that a deck exists before requesting statistics, so checking a new deck does not create it.
+
+The background shares a 60-second in-memory statistics cache across tabs and merges concurrent requests. It checks the active Anki profile even on cache hits, clears failed results, and invalidates counts after confirmed note synchronization or settings changes. Visible open surfaces check every 15 seconds; closing or hiding a surface stops polling, and returning to it forces a refresh. No review counts are persisted in browser storage.
+
+The count is informational text, with no click action, navigation arrow, or desktop-review command. Open Anki yourself to study. Anki must be running with its collection open to supply statistics. No additional companion add-on is needed. Anki's counts are a snapshot of its study queue, not a promise of a fixed number of answer-button presses.
 
 ## Local verification
 

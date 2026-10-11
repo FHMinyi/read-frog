@@ -3,6 +3,7 @@ import type { SelectionSession } from "../atoms"
 import type { SelectionPopoverActions } from "@/components/ui/selection-popover"
 import { useAtomValue, useSetAtom } from "jotai"
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { AnkiReviewEntry } from "@/components/anki/anki-review-entry"
 import { CustomActionContent } from "@/components/custom-action/custom-action-content"
 import { CustomActionToolButton } from "@/components/custom-action/custom-action-tool-button"
 import { SaveToAnkiButton } from "@/components/custom-action/save-to-anki-button"
@@ -416,6 +417,7 @@ export function SelectionCustomActionProvider({ children }: { children: ReactNod
             />
             <SelectionToolbarErrorAlert error={displayedError} />
           </SelectionPopover.Body>
+          <AnkiReviewEntry active={isOpen} />
           <CustomActionFooterContent
             paragraphsText={paragraphsText}
             providers={baseCustomActionProviders}

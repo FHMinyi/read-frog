@@ -202,6 +202,20 @@ afterEach(async () => {
 })
 
 describe("persistent Anki sync engine", () => {
+  it("invalidates review counts only after confirmed sync, not local enqueue or failure", async () => {
+    const { dependencies, anki } = await setup()
+    const onSynced = vi.fn<() => void>()
+    const engine = createAnkiEngine({ ...dependencies, onSynced })
+    await engine.enqueue([capture()])
+    expect(onSynced).not.toHaveBeenCalled()
+    anki.failMedia()
+    await engine.processQueue()
+    expect(onSynced).not.toHaveBeenCalled()
+    await engine.retry()
+    await engine.processQueue()
+    expect(onSynced).toHaveBeenCalledOnce()
+    expect((await engine.getSnapshot()).entries[0]?.status).toBe("synced")
+  })
   it("upgrades only the legacy shared answer template once", async () => {
     const { engine, anki } = await setup()
     anki.setBackTemplate("{{Back}}")

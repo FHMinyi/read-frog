@@ -2,6 +2,7 @@ import { browser } from "#imports"
 import { validateAnkiCapture } from "@/utils/anki/capture"
 import { createAnkiClient } from "@/utils/anki/client"
 import { ankiEngine } from "@/utils/anki/engine"
+import { ankiReview } from "@/utils/anki/review"
 import { logger } from "@/utils/logger"
 import { onMessage } from "@/utils/message"
 
@@ -16,6 +17,7 @@ export function setupAnkiMessageHandlers() {
     })
   }
   onMessage("ankiGetSnapshot", () => ankiEngine.getSnapshot())
+  onMessage("ankiGetReviewStatus", ({ data }) => ankiReview.getStatus(data?.force === true))
   onMessage("ankiEnqueue", async ({ data }) => {
     if (!Array.isArray(data?.captures) || !data.captures.length || data.captures.length > 20) {
       throw new Error("Save between 1 and 20 words or phrases at a time.")
@@ -26,6 +28,7 @@ export function setupAnkiMessageHandlers() {
   })
   onMessage("ankiSaveSettings", async ({ data }) => {
     const snapshot = await ankiEngine.updateSettings(data)
+    ankiReview.invalidate()
     drain()
     return snapshot
   })

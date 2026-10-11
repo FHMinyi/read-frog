@@ -55,6 +55,19 @@ export interface AnkiSnapshot {
   entries: AnkiEntry[]
 }
 
+export type AnkiReviewStatus =
+  | { state: "disabled" | "unavailable" | "missing-deck"; deckName: string }
+  | {
+      endpoint: string
+      deckName: string
+      profileName: string
+      state: "ready"
+      newCount: number
+      learningCount: number
+      reviewCount: number
+      checkedAt: number
+    }
+
 export const DEFAULT_ANKI_SETTINGS: AnkiSettings = {
   endpoint: "http://127.0.0.1:8765",
   deckName: "Read Frog",
